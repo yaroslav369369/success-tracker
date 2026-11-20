@@ -22,8 +22,8 @@
     .stats { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; font-size: 0.9rem; }
     .stats b { font-size: 1.05rem; margin-left: 4px; }
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
-    .chart-wrap { width: 100%; overflow-x: auto; }
-    svg { width: 100%; min-width: 680px; display: block; user-select: none; }
+    .chart-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    svg { width: 100%; min-width: 1150px; display: block; user-select: none; }
     .date-lbl { fill: var(--muted); font-size: 10px; cursor: pointer; }
     .date-lbl.active, .date-lbl:hover { fill: var(--text); font-weight: 700; }
     .pt { cursor: pointer; }
@@ -46,23 +46,23 @@
 <body>
   <div class="container">
     <header>
-      <div><h1>Трекер успішності</h1><div class="sub">20 листопада — 20 грудня 2026</div></div>
+      <div><h1>Трекер успішності</h1><div class="sub">21 листопада 2026 — 21 лютого 2027</div></div>
       <div class="badge"><span class="dot" id="dot"></span><span id="st">Підключення...</span></div>
     </header>
     <div class="stats">
       <div><span class="sub">Баланс:</span><b id="sBal">0</b></div>
-      <div><span class="sub">Заповнено:</span><b id="sDays">0 / 31</b></div>
+      <div><span class="sub">Заповнено:</span><b id="sDays">0 / 93</b></div>
       <div><span class="sub">+1:</span><b style="color:var(--green)" id="sP">0</b></div>
       <div><span class="sub">0:</span><b style="color:var(--blue)" id="sZ">0</b></div>
       <div><span class="sub">-1:</span><b style="color:var(--red)" id="sM">0</b></div>
     </div>
     <div class="card">
-      <div class="chart-wrap"><svg id="chart" viewBox="0 0 920 250"></svg></div>
+      <div class="chart-wrap"><svg id="chart" viewBox="0 0 1300 250"></svg></div>
       <div class="info" id="info">Натисніть на дату на графіку, щоб переглянути або змінити запис.</div>
     </div>
     <div class="card">
       <div class="form">
-        <input type="date" id="dIn" min="2026-11-20" max="2026-12-20" />
+        <input type="date" id="dIn" min="2026-11-21" max="2027-02-21" />
         <div class="btns">
           <button type="button" class="s-btn" data-v="1">+1</button>
           <button type="button" class="s-btn sel" data-v="0">0</button>
@@ -89,7 +89,7 @@
     });
     const db = getDatabase(app);
     const entriesRef = ref(db, "entries");
-    const START = "2026-11-20", END = "2026-12-20", KEY = "tracker_v1";
+    const START = "2026-11-21", END = "2027-02-21", KEY = "tracker_v2";
     let entries = JSON.parse(localStorage.getItem(KEY) || "{}"), selScore = 0;
 
     const dIn = document.getElementById("dIn"), nIn = document.getElementById("nIn");
@@ -101,6 +101,7 @@
     for (let c = new Date(START + "T00:00:00"), e = new Date(END + "T00:00:00"); c <= e; c.setDate(c.getDate() + 1)) {
       DATES.push(`${c.getFullYear()}-${String(c.getMonth()+1).padStart(2,"0")}-${String(c.getDate()).padStart(2,"0")}`);
     }
+    const TOTAL_DAYS = DATES.length;
 
     const fmt = iso => `${iso.slice(8,10)}.${iso.slice(5,7)}`;
     const yest = () => {
@@ -140,15 +141,15 @@
       const b = p - m, bal = document.getElementById("sBal");
       bal.textContent = b > 0 ? `+${b}` : b;
       bal.style.color = b > 0 ? "var(--green)" : b < 0 ? "var(--red)" : "var(--text)";
-      document.getElementById("sDays").textContent = `${t} / 31`;
+      document.getElementById("sDays").textContent = `${t} / ${TOTAL_DAYS}`;
       document.getElementById("sP").textContent = p;
       document.getElementById("sZ").textContent = z;
       document.getElementById("sM").textContent = m;
     };
 
     const draw = () => {
-      const svg = document.getElementById("chart"), W = 920, H = 250, pL = 34, pR = 18, pT = 24, pB = 34;
-      const yM = { "1": pT, "0": pT + (H-pT-pB)/2, "-1": H - pB }, step = (W - pL - pR) / (DATES.length - 1);
+      const svg = document.getElementById("chart"), W = 1300, H = 250, pL = 34, pR = 20, pT = 24, pB = 34;
+      const yM = { "1": pT, "0": pT + (H-pT-pB)/2, "-1": H - pB }, step = (W - pL - pR) / (TOTAL_DAYS - 1);
       let h = "";
       ["1", "0", "-1"].forEach(v => {
         h += `<line x1="${pL}" y1="${yM[v]}" x2="${W-pR}" y2="${yM[v]}" stroke="${v==="0"?"#484f58":"#30363d"}" stroke-width="${v==="0"?1.5:1}" ${v==="0"?"":'stroke-dasharray="4 4"'} />`;
@@ -157,7 +158,7 @@
       const pts = [];
       DATES.forEach((iso, i) => {
         const x = pL + i * step, act = dIn.value === iso;
-        if (i % 2 === 0 || i === 30 || act) h += `<text x="${x}" y="${H-10}" text-anchor="middle" class="date-lbl ${act?"active":""}" data-d="${iso}">${fmt(iso)}</text>`;
+        if (i % 4 === 0 || i === TOTAL_DAYS - 1 || act) h += `<text x="${x}" y="${H-10}" text-anchor="middle" class="date-lbl ${act?"active":""}" data-d="${iso}">${fmt(iso)}</text>`;
         if (entries[iso] !== undefined) pts.push({ iso, x, y: yM[String(entries[iso].score)], s: Number(entries[iso].score) });
       });
       for (let i = 0; i < pts.length - 1; i++) {
@@ -166,7 +167,7 @@
       }
       pts.forEach(p => {
         const col = p.s===1?"#2ea043":p.s===-1?"#f85149":"#388bfd";
-        h += `<g class="pt" data-d="${p.iso}">${dIn.value===p.iso?`<circle cx="${p.x}" cy="${p.y}" r="10" fill="${col}" opacity=".25"/>`:""}<circle cx="${p.x}" cy="${p.y}" r="5.5" fill="${col}" stroke="#0d1117" stroke-width="2"/></g>`;
+        h += `<g class="pt" data-d="${p.iso}">${dIn.value===p.iso?`<circle cx="${p.x}" cy="${p.y}" r="9" fill="${col}" opacity=".25"/>`:""}<circle cx="${p.x}" cy="${p.y}" r="4.5" fill="${col}" stroke="#0d1117" stroke-width="1.5"/></g>`;
       });
       svg.innerHTML = h;
       svg.querySelectorAll("[data-d]").forEach(el => el.onclick = () => loadDate(el.dataset.d));

@@ -15,10 +15,13 @@
     header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     h1 { font-size: 1.35rem; }
     .sub { font-size: 0.85rem; color: var(--muted); }
+    .h-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 5px 10px; border-radius: 999px; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #d29922; }
     .dot.online { background: var(--green); box-shadow: 0 0 8px var(--green); }
     .dot.error { background: var(--red); }
+    .auth-btn { background: var(--soft); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+    .auth-btn:hover { border-color: var(--muted); }
     .stats { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; font-size: 0.9rem; }
     .stats b { font-size: 1.05rem; margin-left: 4px; }
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
@@ -40,6 +43,8 @@
     .save { background: var(--text); color: var(--bg); }
     .del { background: transparent; border: 1px solid var(--border); color: var(--red); display: none; }
     .del.show { display: inline-block; }
+    .lock-box { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .hidden { display: none !important; }
     @media (max-width: 640px) { .form { flex-direction: column; align-items: stretch; } .s-btn { flex: 1; } }
   </style>
 </head>
@@ -47,7 +52,10 @@
   <div class="container">
     <header>
       <div><h1>Трекер успішності</h1><div class="sub">21 листопада 2026 — 21 лютого 2027</div></div>
-      <div class="badge"><span class="dot" id="dot"></span><span id="st">Підключення...</span></div>
+      <div class="h-right">
+        <div class="badge"><span class="dot" id="dot"></span><span id="st">Підключення...</span></div>
+        <button type="button" class="auth-btn hidden" id="logoutBtn">Вийти</button>
+      </div>
     </header>
     <div class="stats">
       <div><span class="sub">Баланс:</span><b id="sBal">0</b></div>
@@ -58,9 +66,15 @@
     </div>
     <div class="card">
       <div class="chart-wrap"><svg id="chart" viewBox="0 0 1300 250"></svg></div>
-      <div class="info" id="info">Натисніть на дату на графіку, щоб переглянути або змінити запис.</div>
+      <div class="info" id="info">Натисніть на дату на графіку, щоб переглянути запис.</div>
     </div>
-    <div class="card">
+    <div class="card" id="lockCard">
+      <div class="lock-box">
+        <span class="sub">Режим перегляду. Щоб вносити або змінювати дані, увійдіть у свій акаунт.</span>
+        <button type="button" class="act save" id="loginBtn">Увійти через Google</button>
+      </div>
+    </div>
+    <div class="card hidden" id="editCard">
       <div class="form">
         <input type="date" id="dIn" min="2026-11-21" max="2027-02-21" />
         <div class="btns">
@@ -77,6 +91,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const app = initializeApp({
       apiKey: "AIzaSyAZdA8Z-gTyFZw-tUB4UdPTVDWmaUsV7rk",
@@ -88,13 +103,18 @@
       appId: "1:484652251241:web:69c3be359abb25989a8af8"
     });
     const db = getDatabase(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
     const entriesRef = ref(db, "entries");
+
     const START = "2026-11-21", END = "2027-02-21", KEY = "tracker_v2";
-    let entries = JSON.parse(localStorage.getItem(KEY) || "{}"), selScore = 0;
+    let entries = JSON.parse(localStorage.getItem(KEY) || "{}"), selScore = 0, currentUser = null;
 
     const dIn = document.getElementById("dIn"), nIn = document.getElementById("nIn");
     const saveBtn = document.getElementById("saveBtn"), delBtn = document.getElementById("delBtn");
     const info = document.getElementById("info"), dot = document.getElementById("dot"), st = document.getElementById("st");
+    const lockCard = document.getElementById("lockCard"), editCard = document.getElementById("editCard");
+    const loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn");
     const sBtns = document.querySelectorAll(".s-btn");
 
     const DATES = [];
@@ -173,27 +193,56 @@
       svg.querySelectorAll("[data-d]").forEach(el => el.onclick = () => loadDate(el.dataset.d));
     };
 
+    loginBtn.onclick = async () => {
+      try { await signInWithPopup(auth, provider); } catch (e) { alert("Помилка входу: " + e.message); }
+    };
+    logoutBtn.onclick = () => signOut(auth);
+
+    onAuthStateChanged(auth, user => {
+      currentUser = user;
+      if (user) {
+        lockCard.classList.add("hidden");
+        editCard.classList.remove("hidden");
+        logoutBtn.classList.remove("hidden");
+        logoutBtn.textContent = `Вийти (${user.email})`;
+      } else {
+        lockCard.classList.remove("hidden");
+        editCard.classList.add("hidden");
+        logoutBtn.classList.add("hidden");
+      }
+    });
+
     sBtns.forEach(b => b.onclick = () => setScore(b.dataset.v));
     dIn.onchange = () => { if (dIn.value) loadDate(dIn.value); };
     saveBtn.onclick = async () => {
+      if (!currentUser) return;
       const iso = dIn.value; if (!iso || iso < START || iso > END) return;
       const data = { score: selScore, note: nIn.value.trim(), updatedAt: Date.now() };
-      entries[iso] = data; localStorage.setItem(KEY, JSON.stringify(entries));
-      stats(); loadDate(iso);
-      try { await set(ref(db, `entries/${iso}`), data); } catch (e) { console.error(e); }
+      try {
+        await set(ref(db, `entries/${iso}`), data);
+        entries[iso] = data; localStorage.setItem(KEY, JSON.stringify(entries));
+        stats(); loadDate(iso);
+      } catch (e) {
+        alert("Немає доступу до запису. Перевірте, що ви увійшли з правильного email.");
+      }
     };
     delBtn.onclick = async () => {
+      if (!currentUser) return;
       const iso = dIn.value; if (!iso || !entries[iso]) return;
-      delete entries[iso]; localStorage.setItem(KEY, JSON.stringify(entries));
-      stats(); loadDate(iso);
-      try { await remove(ref(db, `entries/${iso}`)); } catch (e) { console.error(e); }
+      try {
+        await remove(ref(db, `entries/${iso}`));
+        delete entries[iso]; localStorage.setItem(KEY, JSON.stringify(entries));
+        stats(); loadDate(iso);
+      } catch (e) {
+        alert("Немає доступу до видалення.");
+      }
     };
 
     onValue(entriesRef, snap => {
       entries = snap.val() || {}; localStorage.setItem(KEY, JSON.stringify(entries));
       dot.className = "dot online"; st.textContent = "Синхронізовано";
       stats(); loadDate(dIn.value || yest());
-    }, () => { dot.className = "dot error"; st.textContent = "Офлайн"; });
+    }, () => { dot.className = "dot error"; st.textContent = "Доступ обмежено"; });
 
     stats(); loadDate(yest());
   </script>

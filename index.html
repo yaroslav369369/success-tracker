@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Трекер успішності</title>
+  <style>
+    :root {
+      --bg: #0d1117; --surface: #161b22; --soft: #1f2630; --border: #30363d;
+      --text: #e6edf3; --muted: #8b949e; --green: #2ea043; --blue: #388bfd; --red: #f85149;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 20px 16px; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 960px; display: flex; flex-direction: column; gap: 14px; }
+    header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    h1 { font-size: 1.35rem; }
+    .sub { font-size: 0.85rem; color: var(--muted); }
+    .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 5px 10px; border-radius: 999px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #d29922; }
+    .dot.online { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .dot.error { background: var(--red); }
+    .stats { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; font-size: 0.9rem; }
+    .stats b { font-size: 1.05rem; margin-left: 4px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+    .chart-wrap { width: 100%; overflow-x: auto; }
+    svg { width: 100%; min-width: 680px; display: block; user-select: none; }
+    .date-lbl { fill: var(--muted); font-size: 10px; cursor: pointer; }
+    .date-lbl.active, .date-lbl:hover { fill: var(--text); font-weight: 700; }
+    .pt { cursor: pointer; }
+    .info { margin-top: 8px; font-size: 0.85rem; color: var(--muted); }
+    .form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    input { background: var(--soft); border: 1px solid var(--border); color: var(--text); padding: 9px 12px; border-radius: 8px; font-size: 0.9rem; outline: none; }
+    input[type="text"] { flex: 1; min-width: 160px; }
+    .btns { display: flex; gap: 6px; }
+    .s-btn { background: var(--soft); border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .s-btn[data-v="1"].sel { background: rgba(46,160,67,.25); border-color: var(--green); color: #56d364; }
+    .s-btn[data-v="0"].sel { background: rgba(56,139,253,.25); border-color: var(--blue); color: #79c0ff; }
+    .s-btn[data-v="-1"].sel { background: rgba(248,81,73,.25); border-color: var(--red); color: #ffa198; }
+    .act { padding: 9px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
+    .save { background: var(--text); color: var(--bg); }
+    .del { background: transparent; border: 1px solid var(--border); color: var(--red); display: none; }
+    .del.show { display: inline-block; }
+    @media (max-width: 640px) { .form { flex-direction: column; align-items: stretch; } .s-btn { flex: 1; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div><h1>Трекер успішності</h1><div class="sub">20 листопада — 20 грудня 2026</div></div>
+      <div class="badge"><span class="dot" id="dot"></span><span id="st">Підключення...</span></div>
+    </header>
+    <div class="stats">
+      <div><span class="sub">Баланс:</span><b id="sBal">0</b></div>
+      <div><span class="sub">Заповнено:</span><b id="sDays">0 / 31</b></div>
+      <div><span class="sub">+1:</span><b style="color:var(--green)" id="sP">0</b></div>
+      <div><span class="sub">0:</span><b style="color:var(--blue)" id="sZ">0</b></div>
+      <div><span class="sub">-1:</span><b style="color:var(--red)" id="sM">0</b></div>
+    </div>
+    <div class="card">
+      <div class="chart-wrap"><svg id="chart" viewBox="0 0 920 250"></svg></div>
+      <div class="info" id="info">Натисніть на дату на графіку, щоб переглянути або змінити запис.</div>
+    </div>
+    <div class="card">
+      <div class="form">
+        <input type="date" id="dIn" min="2026-11-20" max="2026-12-20" />
+        <div class="btns">
+          <button type="button" class="s-btn" data-v="1">+1</button>
+          <button type="button" class="s-btn sel" data-v="0">0</button>
+          <button type="button" class="s-btn" data-v="-1">-1</button>
+        </div>
+        <input type="text" id="nIn" placeholder="Нотатка (необов'язково)..." maxlength="120" />
+        <button type="button" class="act save" id="saveBtn">Зберегти</button>
+        <button type="button" class="act del" id="delBtn">Видалити</button>
+      </div>
+    </div>
+  </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const app = initializeApp({
+      apiKey: "AIzaSyAZdA8Z-gTyFZw-tUB4UdPTVDWmaUsV7rk",
+      authDomain: "success-tracker-2b09e.firebaseapp.com",
+      databaseURL: "https://success-tracker-2b09e-default-rtdb.firebaseio.com",
+      projectId: "success-tracker-2b09e",
+      storageBucket: "success-tracker-2b09e.firebasestorage.app",
+      messagingSenderId: "484652251241",
+      appId: "1:484652251241:web:69c3be359abb25989a8af8"
+    });
+    const db = getDatabase(app);
+    const entriesRef = ref(db, "entries");
+    const START = "2026-11-20", END = "2026-12-20", KEY = "tracker_v1";
+    let entries = JSON.parse(localStorage.getItem(KEY) || "{}"), selScore = 0;
+
+    const dIn = document.getElementById("dIn"), nIn = document.getElementById("nIn");
+    const saveBtn = document.getElementById("saveBtn"), delBtn = document.getElementById("delBtn");
+    const info = document.getElementById("info"), dot = document.getElementById("dot"), st = document.getElementById("st");
+    const sBtns = document.querySelectorAll(".s-btn");
+
+    const DATES = [];
+    for (let c = new Date(START + "T00:00:00"), e = new Date(END + "T00:00:00"); c <= e; c.setDate(c.getDate() + 1)) {
+      DATES.push(`${c.getFullYear()}-${String(c.getMonth()+1).padStart(2,"0")}-${String(c.getDate()).padStart(2,"0")}`);
+    }
+
+    const fmt = iso => `${iso.slice(8,10)}.${iso.slice(5,7)}`;
+    const yest = () => {
+      const d = new Date(); d.setDate(d.getDate() - 1);
+      const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+      return iso < START ? START : iso > END ? END : iso;
+    };
+
+    const setScore = v => {
+      selScore = Number(v);
+      sBtns.forEach(b => b.classList.toggle("sel", Number(b.dataset.v) === selScore));
+    };
+
+    const loadDate = iso => {
+      dIn.value = iso;
+      const item = entries[iso];
+      if (item) {
+        setScore(item.score); nIn.value = item.note || "";
+        saveBtn.textContent = "Оновити"; delBtn.classList.add("show");
+        info.textContent = `${fmt(iso)}: оцінка ${item.score > 0 ? "+" + item.score : item.score}${item.note ? " — " + item.note : ""}`;
+      } else {
+        setScore(0); nIn.value = "";
+        saveBtn.textContent = "Зберегти"; delBtn.classList.remove("show");
+        info.textContent = `${fmt(iso)}: запис ще не додано.`;
+      }
+      draw();
+    };
+
+    const stats = () => {
+      let p = 0, z = 0, m = 0, t = 0;
+      DATES.forEach(d => {
+        if (entries[d] !== undefined) {
+          t++; const s = Number(entries[d].score);
+          if (s === 1) p++; else if (s === 0) z++; else m++;
+        }
+      });
+      const b = p - m, bal = document.getElementById("sBal");
+      bal.textContent = b > 0 ? `+${b}` : b;
+      bal.style.color = b > 0 ? "var(--green)" : b < 0 ? "var(--red)" : "var(--text)";
+      document.getElementById("sDays").textContent = `${t} / 31`;
+      document.getElementById("sP").textContent = p;
+      document.getElementById("sZ").textContent = z;
+      document.getElementById("sM").textContent = m;
+    };
+
+    const draw = () => {
+      const svg = document.getElementById("chart"), W = 920, H = 250, pL = 34, pR = 18, pT = 24, pB = 34;
+      const yM = { "1": pT, "0": pT + (H-pT-pB)/2, "-1": H - pB }, step = (W - pL - pR) / (DATES.length - 1);
+      let h = "";
+      ["1", "0", "-1"].forEach(v => {
+        h += `<line x1="${pL}" y1="${yM[v]}" x2="${W-pR}" y2="${yM[v]}" stroke="${v==="0"?"#484f58":"#30363d"}" stroke-width="${v==="0"?1.5:1}" ${v==="0"?"":'stroke-dasharray="4 4"'} />`;
+        h += `<text x="6" y="${yM[v]+4}" fill="#8b949e" font-size="12" font-weight="600">${v==="1"?"+1":v}</text>`;
+      });
+      const pts = [];
+      DATES.forEach((iso, i) => {
+        const x = pL + i * step, act = dIn.value === iso;
+        if (i % 2 === 0 || i === 30 || act) h += `<text x="${x}" y="${H-10}" text-anchor="middle" class="date-lbl ${act?"active":""}" data-d="${iso}">${fmt(iso)}</text>`;
+        if (entries[iso] !== undefined) pts.push({ iso, x, y: yM[String(entries[iso].score)], s: Number(entries[iso].score) });
+      });
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i], b = pts[i+1], col = (a.s===-1||b.s===-1)?"#f85149":(a.s===1||b.s===1)?"#2ea043":"#388bfd";
+        h += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${col}" stroke-width="2.5" stroke-linecap="round" />`;
+      }
+      pts.forEach(p => {
+        const col = p.s===1?"#2ea043":p.s===-1?"#f85149":"#388bfd";
+        h += `<g class="pt" data-d="${p.iso}">${dIn.value===p.iso?`<circle cx="${p.x}" cy="${p.y}" r="10" fill="${col}" opacity=".25"/>`:""}<circle cx="${p.x}" cy="${p.y}" r="5.5" fill="${col}" stroke="#0d1117" stroke-width="2"/></g>`;
+      });
+      svg.innerHTML = h;
+      svg.querySelectorAll("[data-d]").forEach(el => el.onclick = () => loadDate(el.dataset.d));
+    };
+
+    sBtns.forEach(b => b.onclick = () => setScore(b.dataset.v));
+    dIn.onchange = () => { if (dIn.value) loadDate(dIn.value); };
+    saveBtn.onclick = async () => {
+      const iso = dIn.value; if (!iso || iso < START || iso > END) return;
+      const data = { score: selScore, note: nIn.value.trim(), updatedAt: Date.now() };
+      entries[iso] = data; localStorage.setItem(KEY, JSON.stringify(entries));
+      stats(); loadDate(iso);
+      try { await set(ref(db, `entries/${iso}`), data); } catch (e) { console.error(e); }
+    };
+    delBtn.onclick = async () => {
+      const iso = dIn.value; if (!iso || !entries[iso]) return;
+      delete entries[iso]; localStorage.setItem(KEY, JSON.stringify(entries));
+      stats(); loadDate(iso);
+      try { await remove(ref(db, `entries/${iso}`)); } catch (e) { console.error(e); }
+    };
+
+    onValue(entriesRef, snap => {
+      entries = snap.val() || {}; localStorage.setItem(KEY, JSON.stringify(entries));
+      dot.className = "dot online"; st.textContent = "Синхронізовано";
+      stats(); loadDate(dIn.value || yest());
+    }, () => { dot.className = "dot error"; st.textContent = "Офлайн"; });
+
+    stats(); loadDate(yest());
+  </script>
+</body>
+</html>

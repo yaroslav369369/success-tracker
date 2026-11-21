@@ -68,7 +68,8 @@
     .chk-item:hover { border-color: #484f58; }
     .chk-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--green); cursor: pointer; }
     .chk-item.auto-ok { border-color: rgba(46,160,67,.5); }
-    .chk-item.auto-fail { border-color: rgba(248,81,73,.6); }
+    .chk-item.auto-fail { border-color: rgba(248,81,73,.75); background: rgba(248,81,73,.08); }
+    .chk-item.unlocked { border-color: rgba(56,139,253,.5); color: #79c0ff; }
 
     /* Calories & Presets */
     .kcal-box { background: var(--soft); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
@@ -97,6 +98,24 @@
 
     .lesson-row { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
     .bottom-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+    /* 6 Books Pact Card */
+    .pact-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+    .pact-status { font-size: 0.82rem; font-weight: 700; padding: 5px 11px; border-radius: 999px; }
+    .pact-status.locked { background: rgba(248, 81, 73, 0.14); color: #ffa198; border: 1px solid rgba(248, 81, 73, 0.45); }
+    .pact-status.unlocked { background: rgba(46, 160, 67, 0.16); color: #56d364; border: 1px solid rgba(46, 160, 67, 0.5); }
+    .books-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
+    @media (max-width: 720px) { .books-grid { grid-template-columns: 1fr; } }
+    .book-item { background: var(--soft); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+    .book-item.done { border-color: rgba(46, 160, 67, 0.55); background: rgba(46, 160, 67, 0.06); }
+    .book-top { display: flex; align-items: center; gap: 8px; }
+    .book-num { font-size: 0.8rem; font-weight: 700; color: var(--muted); min-width: 22px; }
+    .book-title-in { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px 9px; border-radius: 7px; font-size: 0.86rem; }
+    .book-dates { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-size: 0.78rem; color: var(--muted); }
+    .book-date-grp { display: flex; align-items: center; gap: 5px; }
+    .book-date-in { padding: 4px 6px !important; font-size: 0.78rem !important; }
+    .mini-btn { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 3px 7px; border-radius: 6px; font-size: 0.74rem; cursor: pointer; }
+    .mini-btn:hover { border-color: var(--blue); }
 
     /* Analytics & Weekly cards */
     .card-header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
@@ -217,6 +236,7 @@
                   <input type="checkbox" id="chkFood" checked disabled />
                   <span>Харчування до 2400 ккал/день</span>
                 </div>
+                <label class="chk-item" id="fastfoodBox"><input type="checkbox" id="chkNoFastfood" checked /><span id="fastfoodLabel">Без фастфуду (угода: 0/6 книг)</span></label>
                 <label class="chk-item"><input type="checkbox" id="chkSober" /><span>Повна тверезість</span></label>
                 <label class="chk-item"><input type="checkbox" id="chkMove" /><span>Руханка / йога 30 хв</span></label>
                 <label class="chk-item"><input type="checkbox" id="chkSleep" /><span>Сон 7–8 годин</span></label>
@@ -243,6 +263,19 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- 6 Books vs Fastfood Pact -->
+      <div class="card">
+        <div class="pact-header">
+          <div>
+            <div class="sec-title" style="margin-bottom:2px;">Додаткова угода: 6 книжок → Дозвіл на фастфуд</div>
+            <div class="sub">Поки не завершено 6 книжок, замовлення фастфуду автоматично ставить -1 за день.</div>
+          </div>
+          <div class="pact-status locked" id="pactBadge">🔒 Прочитано: 0 / 6</div>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" id="booksBar" style="width:0%; background:var(--gold);"></div></div>
+        <div class="books-grid" id="booksGrid"></div>
       </div>
 
       <!-- Weekly Scorecard & Weak Link Analytics -->
@@ -299,9 +332,11 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
     const entriesRef = ref(db, "entries");
+    const booksRef = ref(db, "books");
 
-    const START = "2026-11-21", END = "2027-02-21", KEY = "tracker_private_v1";
-    let entries = {}, currentUser = null, draftMeals = [], dbSubscribed = false;
+    const START = "2026-11-21", END = "2027-02-21", KEY = "tracker_private_v2", BOOKS_KEY = "tracker_books_v1";
+    const defaultBooks = () => Array.from({ length: 6 }, () => ({ title: "", startDate: "", endDate: "" }));
+    let entries = {}, books = defaultBooks(), currentUser = null, draftMeals = [], dbSubscribed = false;
 
     const dIn = document.getElementById("dIn"), dayName = document.getElementById("dayName");
     const info = document.getElementById("info"), dot = document.getElementById("dot"), st = document.getElementById("st");
@@ -312,8 +347,8 @@
     const liveScoreEl = document.getElementById("liveScore"), delBtn = document.getElementById("delBtn"), saveBtn = document.getElementById("saveBtn");
     const lessonInput = document.getElementById("lessonInput");
 
-    const chkFood = document.getElementById("chkFood"), chkSober = document.getElementById("chkSober");
-    const chkMove = document.getElementById("chkMove"), chkSleep = document.getElementById("chkSleep");
+    const chkFood = document.getElementById("chkFood"), chkNoFastfood = document.getElementById("chkNoFastfood");
+    const chkSober = document.getElementById("chkSober"), chkMove = document.getElementById("chkMove"), chkSleep = document.getElementById("chkSleep");
     const chkRead = document.getElementById("chkRead"), chkWorkout = document.getElementById("chkWorkout"), chkDuo = document.getElementById("chkDuo");
 
     const manifestoCard = document.getElementById("manifestoCard");
@@ -342,12 +377,117 @@
       return iso;
     };
 
+    const completedBooksCount = () => books.filter(b => b && b.endDate && b.endDate.trim() !== "").length;
+    const isPactUnlocked = () => completedBooksCount() >= 6;
+
+    const renderBooks = () => {
+      const doneCnt = completedBooksCount();
+      const unlocked = doneCnt >= 6;
+      const badge = document.getElementById("pactBadge");
+      const bar = document.getElementById("booksBar");
+
+      bar.style.width = Math.min(100, Math.round((doneCnt / 6) * 100)) + "%";
+      bar.style.background = unlocked ? "var(--green)" : "var(--gold)";
+
+      if (unlocked) {
+        badge.textContent = "🔓 Виконано: 6 / 6 · Заборону знято!";
+        badge.className = "pact-status unlocked";
+      } else {
+        badge.textContent = `🔒 Прочитано: ${doneCnt} / 6`;
+        badge.className = "pact-status locked";
+      }
+
+      const grid = document.getElementById("booksGrid");
+      grid.innerHTML = books.map((b, i) => {
+        const isDone = !!(b.endDate && b.endDate.trim() !== "");
+        return `
+          <div class="book-item ${isDone ? "done" : ""}">
+            <div class="book-top">
+              <span class="book-num">#${i + 1}</span>
+              <input type="text" class="book-title-in" data-idx="${i}" placeholder="Назва книги ${i + 1}..." value="${(b.title || "").replace(/"/g, "&quot;")}" maxlength="80" />
+            </div>
+            <div class="book-dates">
+              <div class="book-date-grp">
+                <span>Старт:</span>
+                <input type="date" class="book-date-in" data-type="start" data-idx="${i}" value="${b.startDate || ""}" />
+                ${!b.startDate ? `<button type="button" class="mini-btn" data-act="startNow" data-idx="${i}">Сьогодні</button>` : ""}
+              </div>
+              <div class="book-date-grp">
+                <span>Фініш:</span>
+                <input type="date" class="book-date-in" data-type="end" data-idx="${i}" value="${b.endDate || ""}" />
+                ${!b.endDate ? `<button type="button" class="mini-btn" data-act="endNow" data-idx="${i}">✓ Готово</button>` : ""}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      grid.querySelectorAll(".book-title-in").forEach(inp => {
+        inp.onchange = () => {
+          books[Number(inp.dataset.idx)].title = inp.value.trim();
+          persistBooks();
+        };
+      });
+
+      grid.querySelectorAll(".book-date-in").forEach(inp => {
+        inp.onchange = () => {
+          const idx = Number(inp.dataset.idx);
+          if (inp.dataset.type === "start") books[idx].startDate = inp.value;
+          else books[idx].endDate = inp.value;
+          persistBooks();
+        };
+      });
+
+      grid.querySelectorAll(".mini-btn").forEach(btn => {
+        btn.onclick = () => {
+          const idx = Number(btn.dataset.idx);
+          const today = toIso(new Date());
+          if (btn.dataset.act === "startNow") books[idx].startDate = today;
+          if (btn.dataset.act === "endNow") {
+            if (!books[idx].startDate) books[idx].startDate = today;
+            books[idx].endDate = today;
+          }
+          persistBooks();
+        };
+      });
+
+      updateFastfoodUI();
+    };
+
+    const updateFastfoodUI = () => {
+      const doneCnt = completedBooksCount();
+      const unlocked = doneCnt >= 6;
+      const box = document.getElementById("fastfoodBox");
+      const lbl = document.getElementById("fastfoodLabel");
+
+      if (unlocked) {
+        lbl.textContent = "Угоду виконано (6/6 книг прочитано — фастфуд дозволено)";
+        box.className = "chk-item unlocked";
+      } else {
+        lbl.textContent = `Без фастфуду (угода: ${doneCnt}/6 книг)`;
+        box.className = chkNoFastfood.checked ? "chk-item" : "chk-item auto-fail";
+      }
+    };
+
+    const persistBooks = async () => {
+      if (!currentUser) return;
+      try {
+        await set(booksRef, books);
+        localStorage.setItem(BOOKS_KEY, JSON.stringify(books));
+        renderBooks();
+        renderNutritionAndScore();
+      } catch (e) {
+        alert("Помилка збереження книг. Перевірте права в Firebase Rules.");
+      }
+    };
+
     const calcTotalKcal = meals => (meals || []).reduce((sum, m) => sum + Number(m.kcal || 0), 0);
 
     const isItemInaraMax = item => {
       if (!item || Number(item.score) !== 1 || !item.habits) return false;
       const h = item.habits;
-      return !!(h.sober && h.move && h.sleep && h.read && h.workout && h.duo && calcTotalKcal(item.meals) <= 2400);
+      const fastfoodOk = isPactUnlocked() ? true : (h.noFastfood !== false);
+      return !!(fastfoodOk && h.sober && h.move && h.sleep && h.read && h.workout && h.duo && calcTotalKcal(item.meals) <= 2400);
     };
 
     const computeInaraStreaks = () => {
@@ -373,7 +513,8 @@
     const computeDayState = () => {
       const kcal = calcTotalKcal(draftMeals);
       const foodOk = kcal <= 2400;
-      const baseOk = foodOk && chkSober.checked && chkMove.checked && chkSleep.checked;
+      const fastfoodOk = isPactUnlocked() ? true : chkNoFastfood.checked;
+      const baseOk = foodOk && fastfoodOk && chkSober.checked && chkMove.checked && chkSleep.checked;
       const bonusCount = (chkRead.checked ? 1 : 0) + (chkWorkout.checked ? 1 : 0) + (chkDuo.checked ? 1 : 0);
       if (!baseOk) return { score: -1, isMax: false };
       if (bonusCount === 0) return { score: 0, isMax: false };
@@ -381,6 +522,7 @@
     };
 
     const renderNutritionAndScore = () => {
+      updateFastfoodUI();
       const kcal = calcTotalKcal(draftMeals);
       const foodOk = kcal <= 2400;
       document.getElementById("kcalTotal").textContent = kcal;
@@ -445,6 +587,7 @@
         lesson,
         meals: draftMeals,
         habits: {
+          noFastfood: chkNoFastfood.checked,
           sober: chkSober.checked,
           move: chkMove.checked,
           sleep: chkSleep.checked,
@@ -462,7 +605,8 @@
         draw();
         updateWeeklyAndAnalytics(iso);
         delBtn.classList.remove("hidden");
-        info.innerHTML = `<strong>${fmt(iso)}:</strong> збережено (${score > 0 ? "+1" : score}${isMax ? " 🔥 Inara Max" : ""}, ${calcTotalKcal(draftMeals)} ккал)${lesson ? ` — «${lesson}»` : ""}.`;
+        const ffWarn = (!isPactUnlocked() && !chkNoFastfood.checked) ? " · ⚠️ порушено угоду без фастфуду" : "";
+        info.innerHTML = `<strong>${fmt(iso)}:</strong> збережено (${score > 0 ? "+1" : score}${isMax ? " 🔥 Inara Max" : ""}, ${calcTotalKcal(draftMeals)} ккал${ffWarn})${lesson ? ` — «${lesson}»` : ""}.`;
       } catch (e) {
         alert("Помилка збереження. Перевірте права доступу в Firebase.");
       }
@@ -491,6 +635,7 @@
       if (item) {
         draftMeals = Array.isArray(item.meals) ? JSON.parse(JSON.stringify(item.meals)) : [];
         const h = item.habits || {};
+        chkNoFastfood.checked = h.noFastfood !== false;
         chkSober.checked = !!h.sober;
         chkMove.checked = !!h.move;
         chkSleep.checked = !!h.sleep;
@@ -500,9 +645,11 @@
         lessonInput.value = item.lesson || "";
         delBtn.classList.remove("hidden");
         const maxTag = isItemInaraMax(item) ? " 🔥 Inara Max" : "";
-        info.innerHTML = `<strong>${fmt(iso)}:</strong> оцінка ${item.score > 0 ? "+" + item.score : item.score}${maxTag} · ${calcTotalKcal(draftMeals)} ккал${item.lesson ? ` — «${item.lesson}»` : ""}.`;
+        const ffWarn = (h.noFastfood === false && !isPactUnlocked()) ? " · ⚠️ порушено угоду без фастфуду" : "";
+        info.innerHTML = `<strong>${fmt(iso)}:</strong> оцінка ${item.score > 0 ? "+" + item.score : item.score}${maxTag} · ${calcTotalKcal(draftMeals)} ккал${ffWarn}${item.lesson ? ` — «${item.lesson}»` : ""}.`;
       } else {
         draftMeals = [];
+        chkNoFastfood.checked = true;
         chkSober.checked = false;
         chkMove.checked = false;
         chkSleep.checked = false;
@@ -560,7 +707,8 @@
       document.getElementById("wAvgKcal").textContent = avgKcal;
 
       const { currentStreak, maxStreak } = computeInaraStreaks();
-      lastWeekReportText = `📊 Звіт тижня (${startLbl} — ${endLbl}):\n• Виконання бази: ${baseOkDays}/${denom} (${pct}%)\n• Днів на +1: ${plusDays} (з них 🔥 Inara Max: ${maxDays})\n• Середня калорійність: ${avgKcal} ккал/день\n• Поточний Inara Streak: ${currentStreak} (рекорд: ${maxStreak})`;
+      const doneBooks = completedBooksCount();
+      lastWeekReportText = `📊 Звіт тижня (${startLbl} — ${endLbl}):\n• Виконання бази: ${baseOkDays}/${denom} (${pct}%)\n• Днів на +1: ${plusDays} (з них 🔥 Inara Max: ${maxDays})\n• Середня калорійність: ${avgKcal} ккал/день\n• Поточний Inara Streak: ${currentStreak} (рекорд: ${maxStreak})\n• Угода «6 книг без фастфуду»: прочитано ${doneBooks}/6`;
 
       const loggedAll = ACTIVE_DATES.map(iso => entries[iso]).filter(Boolean);
       const totalLogged = loggedAll.length;
@@ -568,6 +716,7 @@
 
       const metrics = [
         { label: "Харчування ≤ 2400 ккал", count: loggedAll.filter(x => calcTotalKcal(x.meals) <= 2400).length, color: "var(--green)" },
+        { label: "Без фастфуду (до 6 книг)", count: loggedAll.filter(x => x.habits?.noFastfood !== false).length, color: "var(--green)" },
         { label: "Повна тверезість", count: loggedAll.filter(x => x.habits?.sober).length, color: "var(--green)" },
         { label: "Руханка / йога 30 хв", count: loggedAll.filter(x => x.habits?.move).length, color: "var(--green)" },
         { label: "Сон 7–8 годин", count: loggedAll.filter(x => x.habits?.sleep).length, color: "var(--green)" },
@@ -601,7 +750,8 @@
 
     document.getElementById("exportJsonBtn").onclick = () => {
       if (!currentUser) return;
-      const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "application/json" });
+      const backupPayload = { entries, books, exportedAt: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -697,7 +847,7 @@
       persistCurrentDay();
     };
 
-    [chkSober, chkMove, chkSleep, chkRead, chkWorkout, chkDuo].forEach(el => {
+    [chkNoFastfood, chkSober, chkMove, chkSleep, chkRead, chkWorkout, chkDuo].forEach(el => {
       el.onchange = () => {
         renderNutritionAndScore();
         persistCurrentDay();
@@ -740,20 +890,30 @@
         authErrorMsg.textContent = "Цей Google-акаунт не має прав доступу до бази даних.";
         authErrorMsg.classList.remove("hidden");
       });
+
+      onValue(booksRef, snap => {
+        const val = snap.val();
+        if (Array.isArray(val) && val.length === 6) {
+          books = val;
+        } else {
+          books = defaultBooks();
+        }
+        localStorage.setItem(BOOKS_KEY, JSON.stringify(books));
+        renderBooks();
+        renderNutritionAndScore();
+      });
     };
 
     const stopSync = () => {
       if (dbSubscribed) {
         off(entriesRef);
+        off(booksRef);
         dbSubscribed = false;
       }
       entries = {};
+      books = defaultBooks();
       localStorage.removeItem(KEY);
-      localStorage.removeItem("tracker_v2");
-      localStorage.removeItem("tracker_v3");
-      localStorage.removeItem("tracker_v4");
-      localStorage.removeItem("tracker_v5");
-      localStorage.removeItem("tracker_v6");
+      localStorage.removeItem(BOOKS_KEY);
     };
 
     loginBtn.onclick = async () => {
@@ -773,11 +933,14 @@
       currentUser = user;
       if (user) {
         entries = JSON.parse(localStorage.getItem(KEY) || "{}");
+        const savedBooks = JSON.parse(localStorage.getItem(BOOKS_KEY) || "null");
+        books = Array.isArray(savedBooks) && savedBooks.length === 6 ? savedBooks : defaultBooks();
         lockCard.classList.add("hidden");
         appWorkspace.classList.remove("hidden");
         logoutBtn.classList.remove("hidden");
         manifestoToggle.classList.remove("hidden");
         logoutBtn.textContent = `Вийти (${user.email})`;
+        renderBooks();
         stats();
         loadDate(dIn.value || todayOrNextActive());
         startSync();

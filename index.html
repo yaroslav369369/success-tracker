@@ -10,21 +10,23 @@
       --text: #e6edf3; --muted: #8b949e; --green: #2ea043; --blue: #388bfd; --red: #f85149; --gold: #f0883e;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding: 20px 16px 48px; display: flex; justify-content: center; }
-    .container { width: 100%; max-width: 960px; display: flex; flex-direction: column; gap: 14px; }
-    header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    h1 { font-size: 1.35rem; }
-    .sub { font-size: 0.85rem; color: var(--muted); }
+    body { background: var(--bg); color: var(--text); padding: 20px 16px 56px; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 980px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* Top App Bar */
+    header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-bottom: 4px; }
+    .brand h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.01em; }
+    .sub { font-size: 0.84rem; color: var(--muted); }
     .h-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 5px 10px; border-radius: 999px; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 5px 10px; border-radius: 999px; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #d29922; }
     .dot.online { background: var(--green); box-shadow: 0 0 8px var(--green); }
     .dot.error { background: var(--red); }
-    .pill-btn { background: var(--soft); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+    .pill-btn { background: var(--soft); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: border-color .15s; }
     .pill-btn:hover { border-color: #586069; }
 
     /* Lock screen */
-    .lock-screen { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 44px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 12px; }
+    .lock-screen { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 12px; }
     .lock-icon { font-size: 2.2rem; }
     .lock-title { font-size: 1.15rem; font-weight: 700; }
     .lock-desc { font-size: 0.9rem; color: var(--muted); max-width: 420px; line-height: 1.5; }
@@ -34,35 +36,52 @@
     .manifesto-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
     .manifesto-body { font-size: 0.9rem; line-height: 1.55; color: #c9d1d9; white-space: pre-line; }
 
-    /* Top Stats */
-    .stats { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; font-size: 0.9rem; }
-    .stats b { font-size: 1.05rem; margin-left: 4px; }
-    .inara-pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(240, 136, 62, 0.12); border: 1px solid rgba(240, 136, 62, 0.45); color: #ffa657; padding: 4px 10px; border-radius: 8px; font-size: 0.85rem; }
-    .inara-pill b { font-size: 0.98rem; margin-left: 2px; }
-    .inara-rec { color: var(--muted); font-size: 0.8rem; margin-left: 4px; }
+    /* Hero Date Bar */
+    .hero-date-card {
+      background: linear-gradient(135deg, #18202c 0%, #161b22 100%);
+      border: 1px solid #38414e;
+      border-radius: 16px;
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .date-control-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .nav-arrows { display: inline-flex; align-items: center; gap: 6px; }
+    .nav-btn {
+      background: var(--soft); border: 1px solid var(--border); color: var(--text);
+      height: 38px; min-width: 38px; padding: 0 11px; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: border-color .15s, background .15s;
+    }
+    .nav-btn:hover { border-color: #586069; background: #262f3b; }
+    .date-big-wrap { display: flex; flex-direction: column; gap: 2px; }
+    .date-big-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .hero-date-text { font-size: 1.65rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text); line-height: 1.1; }
+    .hero-weekday { font-size: 1rem; font-weight: 600; color: var(--blue); }
+    .hero-weekday.sat { color: var(--gold); }
+    .date-picker-mini {
+      background: var(--bg); border: 1px solid var(--border); color: var(--muted);
+      padding: 4px 8px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; outline: none;
+    }
+    .date-picker-mini:hover { border-color: #586069; color: var(--text); }
 
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
-    .chart-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    svg { width: 100%; min-width: 1150px; display: block; user-select: none; }
-    .date-lbl { fill: var(--muted); font-size: 10px; cursor: pointer; }
-    .date-lbl.sat { fill: #586069; }
-    .date-lbl.active, .date-lbl:hover { fill: var(--text); font-weight: 700; }
-    .pt { cursor: pointer; }
-    .info { margin-top: 8px; font-size: 0.86rem; color: var(--muted); line-height: 1.4; }
-    .info strong { color: var(--text); font-weight: 600; }
-
-    /* Day editor */
-    .day-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
-    .score-pill { font-weight: 700; font-size: 0.95rem; padding: 6px 12px; border-radius: 8px; background: var(--soft); border: 1px solid var(--border); }
-    .score-pill.p1 { color: #56d364; border-color: var(--green); background: rgba(46,160,67,.15); }
+    .score-pill { font-weight: 700; font-size: 1rem; padding: 9px 16px; border-radius: 12px; background: var(--soft); border: 1px solid var(--border); }
+    .score-pill.p1 { color: #56d364; border-color: var(--green); background: rgba(46,160,67,.16); }
     .score-pill.inara { color: #ffa657; border-color: var(--gold); background: rgba(240,136,62,.18); }
-    .score-pill.p0 { color: #79c0ff; border-color: var(--blue); background: rgba(56,139,253,.15); }
-    .score-pill.m1 { color: #ffa198; border-color: var(--red); background: rgba(248,81,73,.15); }
+    .score-pill.p0 { color: #79c0ff; border-color: var(--blue); background: rgba(56,139,253,.16); }
+    .score-pill.m1 { color: #ffa198; border-color: var(--red); background: rgba(248,81,73,.16); }
 
+    /* Cards & Layout */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media (max-width: 740px) { .grid-2 { grid-template-columns: 1fr; } }
+    @media (max-width: 760px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .hero-date-text { font-size: 1.35rem; }
+    }
 
-    .sec-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 10px; font-weight: 700; }
+    .sec-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 10px; font-weight: 700; }
     .chk-list { display: flex; flex-direction: column; gap: 8px; }
     .chk-item { display: flex; align-items: center; gap: 10px; background: var(--soft); border: 1px solid var(--border); padding: 10px 12px; border-radius: 10px; cursor: pointer; font-size: 0.92rem; transition: border-color .15s; }
     .chk-item:hover { border-color: #484f58; }
@@ -72,18 +91,18 @@
     .chk-item.unlocked { border-color: rgba(56,139,253,.5); color: #79c0ff; }
 
     /* Calories & Presets */
-    .kcal-box { background: var(--soft); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .kcal-box { background: var(--soft); border: 1px solid var(--border); border-radius: 10px; padding: 13px; }
     .kcal-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; margin-bottom: 8px; }
     .bar-bg { width: 100%; height: 8px; background: var(--bg); border-radius: 999px; overflow: hidden; }
     .bar-fill { height: 100%; background: var(--green); transition: width .2s, background .2s; }
     .bar-fill.over { background: var(--red); }
 
     .presets-wrap { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
-    .preset-chip { background: var(--bg); border: 1px solid var(--border); color: #c9d1d9; padding: 4px 8px; border-radius: 6px; font-size: 0.76rem; cursor: pointer; transition: border-color .15s; }
+    .preset-chip { background: var(--bg); border: 1px solid var(--border); color: #c9d1d9; padding: 5px 9px; border-radius: 7px; font-size: 0.76rem; cursor: pointer; transition: border-color .15s; }
     .preset-chip:hover { border-color: var(--blue); color: var(--text); }
 
     .meal-form { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
-    input[type="date"], input[type="text"], input[type="number"] { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 10px; border-radius: 8px; font-size: 0.88rem; outline: none; }
+    input[type="text"], input[type="number"], input[type="date"] { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 10px; border-radius: 8px; font-size: 0.88rem; outline: none; }
     input[type="text"] { flex: 1; min-width: 120px; }
     input[type="number"] { width: 88px; }
     .btn { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-weight: 600; font-size: 0.84rem; cursor: pointer; }
@@ -91,13 +110,29 @@
     .btn-primary { background: var(--text); color: var(--bg); border: none; padding: 10px 18px; font-size: 0.9rem; }
     .btn-del { color: var(--red); background: transparent; border: 1px solid var(--border); }
 
-    .meal-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; max-height: 170px; overflow-y: auto; }
+    .meal-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; max-height: 175px; overflow-y: auto; }
     .meal-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.84rem; padding: 6px 10px; background: var(--bg); border-radius: 7px; border: 1px solid var(--border); }
     .meal-rm { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 0 4px; }
     .meal-rm:hover { color: var(--red); }
 
-    .lesson-row { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
+    .lesson-row { margin-top: 14px; display: flex; gap: 8px; align-items: center; }
     .bottom-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+    /* Global Stats & Chart */
+    .stats { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 14px; font-size: 0.9rem; }
+    .stats b { font-size: 1.05rem; margin-left: 4px; }
+    .inara-pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(240, 136, 62, 0.12); border: 1px solid rgba(240, 136, 62, 0.45); color: #ffa657; padding: 4px 10px; border-radius: 8px; font-size: 0.85rem; }
+    .inara-pill b { font-size: 0.98rem; margin-left: 2px; }
+    .inara-rec { color: var(--muted); font-size: 0.8rem; margin-left: 4px; }
+
+    .chart-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    svg { width: 100%; min-width: 1150px; display: block; user-select: none; }
+    .date-lbl { fill: var(--muted); font-size: 10px; cursor: pointer; }
+    .date-lbl.sat { fill: #586069; }
+    .date-lbl.active, .date-lbl:hover { fill: var(--text); font-weight: 700; }
+    .pt { cursor: pointer; }
+    .info { margin-top: 10px; font-size: 0.85rem; color: var(--muted); line-height: 1.4; }
+    .info strong { color: var(--text); font-weight: 600; }
 
     /* 6 Books Pact Card */
     .pact-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
@@ -138,7 +173,10 @@
 <body>
   <div class="container">
     <header>
-      <div><h1>Трекер успішності</h1><div class="sub">21 листопада 2026 — 21 лютого 2027 · Субота — вихідний</div></div>
+      <div class="brand">
+        <h1>Трекер успішності</h1>
+        <div class="sub">Цикл: 21 листопада 2026 — 21 лютого 2027 · Субота — вихідний</div>
+      </div>
       <div class="h-right">
         <button type="button" class="pill-btn hidden" id="manifestoToggle">📜 Маніфест</button>
         <div class="badge"><span class="dot" id="dot"></span><span id="st">Очікування входу</span></div>
@@ -156,8 +194,8 @@
     </div>
 
     <!-- Protected App Workspace -->
-    <div id="appWorkspace" class="hidden" style="display:flex; flex-direction:column; gap:14px;">
-      <!-- Manifesto placeholder -->
+    <div id="appWorkspace" class="hidden" style="display:flex; flex-direction:column; gap:16px;">
+      <!-- Manifesto drawer -->
       <div class="manifesto-card hidden" id="manifestoCard">
         <div class="manifesto-title">
           <span>📜 Мій Маніфест (21.11.2026 — 21.02.2027)</span>
@@ -166,33 +204,33 @@
         <div class="manifesto-body" id="manifestoText">Місце для твого маніфесту підготовлено. Коли сформулюєш текст — додамо його сюди, щоб завжди тримати фокус перед очима.</div>
       </div>
 
-      <div class="stats">
-        <div><span class="sub">Баланс:</span><b id="sBal">0</b></div>
-        <div><span class="sub">Днів:</span><b id="sDays">0 / 79</b></div>
-        <div><span class="sub">+1:</span><b style="color:var(--green)" id="sP">0</b></div>
-        <div><span class="sub">0:</span><b style="color:var(--blue)" id="sZ">0</b></div>
-        <div><span class="sub">-1:</span><b style="color:var(--red)" id="sM">0</b></div>
-        <div class="inara-pill" title="Серія днів на абсолютний максимум (База + усі 3 бонусні пункти)">
-          🔥 Inara Streak: <b id="sInaraCur">0</b>
-          <span class="inara-rec">(рекорд: <span id="sInaraMax">0</span>)</span>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="chart-wrap"><svg id="chart" viewBox="0 0 1300 250"></svg></div>
-        <div class="info" id="info">Натисніть на дату на графіку, щоб переглянути запис.</div>
-      </div>
-
-      <div class="card" id="editCard">
-        <div class="day-top">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <input type="date" id="dIn" min="2026-11-21" max="2027-02-21" />
-            <span class="sub" id="dayName"></span>
+      <!-- 1. Prominent Top Date Hero Bar -->
+      <div class="hero-date-card">
+        <div class="date-control-group">
+          <div class="nav-arrows">
+            <button type="button" class="nav-btn" id="prevDayBtn" title="Попередній день">‹</button>
+            <button type="button" class="nav-btn" id="todayBtn" style="font-size:0.8rem;">Сьогодні</button>
+            <button type="button" class="nav-btn" id="nextDayBtn" title="Наступний день">›</button>
           </div>
-          <div class="score-pill" id="liveScore">Оцінка дня: 0</div>
+          <div class="date-big-wrap">
+            <div class="date-big-row">
+              <span class="hero-date-text" id="heroDateTitle">22 листопада 2026</span>
+              <span class="hero-weekday" id="dayName">Неділя</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:3px;">
+              <span class="sub" style="font-size:0.78rem;">Календар:</span>
+              <input type="date" class="date-picker-mini" id="dIn" min="2026-11-21" max="2027-02-21" />
+            </div>
+          </div>
         </div>
+        <div class="score-pill" id="liveScore">Оцінка дня: 0</div>
+      </div>
 
-        <div id="restMsg" class="sub hidden" style="padding: 8px 0;">Субота — день повного відпочинку. Калорії та звички не фіксуються (Inara Streak не згорає).</div>
+      <!-- 2. Daily Action Card (Nutrition + Habits) -->
+      <div class="card" id="editCard">
+        <div id="restMsg" class="sub hidden" style="padding: 12px 4px; font-size:0.95rem;">
+          🌿 Субота — день повного відпочинку. Калорії та звички не фіксуються (Inara Streak не згорає).
+        </div>
 
         <div id="activeControls">
           <div class="grid-2">
@@ -256,16 +294,33 @@
           </div>
 
           <div class="bottom-actions">
-            <span class="sub">Дані зберігаються автоматично.</span>
+            <span class="sub">Зміни зберігаються автоматично.</span>
             <div style="display:flex; gap:8px;">
               <button type="button" class="btn btn-del hidden" id="delBtn">Скинути день</button>
-              <button type="button" class="btn btn-primary" style="padding:8px 12px; font-size:0.84rem;" id="saveBtn">Зберегти день</button>
+              <button type="button" class="btn btn-primary" style="padding:8px 14px; font-size:0.84rem;" id="saveBtn">Зберегти день</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 6 Books vs Fastfood Pact -->
+      <!-- 3. Progress Overview & Chart -->
+      <div class="card">
+        <div class="stats">
+          <div><span class="sub">Баланс:</span><b id="sBal">0</b></div>
+          <div><span class="sub">Днів:</span><b id="sDays">0 / 79</b></div>
+          <div><span class="sub">+1:</span><b style="color:var(--green)" id="sP">0</b></div>
+          <div><span class="sub">0:</span><b style="color:var(--blue)" id="sZ">0</b></div>
+          <div><span class="sub">-1:</span><b style="color:var(--red)" id="sM">0</b></div>
+          <div class="inara-pill" title="Серія днів на абсолютний максимум (База + усі 3 бонусні пункти)">
+            🔥 Inara Streak: <b id="sInaraCur">0</b>
+            <span class="inara-rec">(рекорд: <span id="sInaraMax">0</span>)</span>
+          </div>
+        </div>
+        <div class="chart-wrap"><svg id="chart" viewBox="0 0 1300 250"></svg></div>
+        <div class="info" id="info">Натисніть на дату на графіку, щоб переглянути запис.</div>
+      </div>
+
+      <!-- 4. 6 Books vs Fastfood Pact -->
       <div class="card">
         <div class="pact-header">
           <div>
@@ -278,7 +333,7 @@
         <div class="books-grid" id="booksGrid"></div>
       </div>
 
-      <!-- Weekly Scorecard & Weak Link Analytics -->
+      <!-- 5. Weekly Scorecard & Weak Link Analytics -->
       <div class="grid-2">
         <div class="card">
           <div class="card-header-row">
@@ -338,7 +393,7 @@
     const defaultBooks = () => Array.from({ length: 6 }, () => ({ title: "", startDate: "", endDate: "" }));
     let entries = {}, books = defaultBooks(), currentUser = null, draftMeals = [], dbSubscribed = false;
 
-    const dIn = document.getElementById("dIn"), dayName = document.getElementById("dayName");
+    const dIn = document.getElementById("dIn"), dayName = document.getElementById("dayName"), heroDateTitle = document.getElementById("heroDateTitle");
     const info = document.getElementById("info"), dot = document.getElementById("dot"), st = document.getElementById("st");
     const lockCard = document.getElementById("lockCard"), appWorkspace = document.getElementById("appWorkspace");
     const loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn");
@@ -356,7 +411,13 @@
     document.getElementById("manifestoClose").onclick = () => manifestoCard.classList.add("hidden");
 
     const DAYS_UA = ["Неділя", "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота"];
+    const MONTHS_UA = ["січня", "лютого", "березня", "квітня", "травня", "червня", "липня", "серпня", "вересня", "жовтня", "листопада", "грудня"];
     const isSaturday = iso => new Date(iso + "T00:00:00").getDay() === 6;
+
+    const formatHeroDate = iso => {
+      const d = new Date(iso + "T00:00:00");
+      return `${d.getDate()} ${MONTHS_UA[d.getMonth()]} ${d.getFullYear()}`;
+    };
 
     const DATES = [];
     for (let c = new Date(START + "T00:00:00"), e = new Date(END + "T00:00:00"); c <= e; c.setDate(c.getDate() + 1)) {
@@ -376,6 +437,17 @@
       if (iso > END) return END;
       return iso;
     };
+
+    const shiftDate = delta => {
+      const idx = DATES.indexOf(dIn.value);
+      if (idx === -1) return;
+      const nextIdx = idx + delta;
+      if (nextIdx >= 0 && nextIdx < DATES.length) loadDate(DATES[nextIdx]);
+    };
+
+    document.getElementById("prevDayBtn").onclick = () => shiftDate(-1);
+    document.getElementById("nextDayBtn").onclick = () => shiftDate(1);
+    document.getElementById("todayBtn").onclick = () => loadDate(todayOrNextActive());
 
     const completedBooksCount = () => books.filter(b => b && b.endDate && b.endDate.trim() !== "").length;
     const isPactUnlocked = () => completedBooksCount() >= 6;
@@ -565,6 +637,8 @@
         };
       });
 
+      if (isSaturday(dIn.value)) return;
+
       const { score, isMax } = computeDayState();
       if (isMax) {
         liveScoreEl.textContent = "Оцінка: +1 🔥 Inara Max";
@@ -615,10 +689,13 @@
     const loadDate = iso => {
       dIn.value = iso;
       const dObj = new Date(iso + "T00:00:00");
+      const sat = isSaturday(iso);
+      heroDateTitle.textContent = formatHeroDate(iso);
       dayName.textContent = DAYS_UA[dObj.getDay()];
+      dayName.className = sat ? "hero-weekday sat" : "hero-weekday";
       updateWeeklyAndAnalytics(iso);
 
-      if (isSaturday(iso)) {
+      if (sat) {
         activeControls.classList.add("hidden");
         restMsg.classList.remove("hidden");
         liveScoreEl.textContent = "Вихідний";

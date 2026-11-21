@@ -10,7 +10,7 @@
       --text: #e6edf3; --muted: #8b949e; --green: #2ea043; --blue: #388bfd; --red: #f85149; --gold: #f0883e;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding: 20px 16px 40px; display: flex; justify-content: center; }
+    body { background: var(--bg); color: var(--text); padding: 20px 16px 48px; display: flex; justify-content: center; }
     .container { width: 100%; max-width: 960px; display: flex; flex-direction: column; gap: 14px; }
     header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     h1 { font-size: 1.35rem; }
@@ -20,12 +20,21 @@
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #d29922; }
     .dot.online { background: var(--green); box-shadow: 0 0 8px var(--green); }
     .dot.error { background: var(--red); }
-    .auth-btn { background: var(--soft); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+    .pill-btn { background: var(--soft); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+    .pill-btn:hover { border-color: #586069; }
+
+    /* Manifesto drawer */
+    .manifesto-card { background: linear-gradient(180deg, #1b222c 0%, #161b22 100%); border: 1px solid #3d4754; border-radius: 14px; padding: 16px 18px; }
+    .manifesto-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .manifesto-body { font-size: 0.9rem; line-height: 1.55; color: #c9d1d9; white-space: pre-line; }
+
+    /* Top Stats */
     .stats { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; font-size: 0.9rem; }
     .stats b { font-size: 1.05rem; margin-left: 4px; }
     .inara-pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(240, 136, 62, 0.12); border: 1px solid rgba(240, 136, 62, 0.45); color: #ffa657; padding: 4px 10px; border-radius: 8px; font-size: 0.85rem; }
     .inara-pill b { font-size: 0.98rem; margin-left: 2px; }
     .inara-rec { color: var(--muted); font-size: 0.8rem; margin-left: 4px; }
+
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
     .chart-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     svg { width: 100%; min-width: 1150px; display: block; user-select: none; }
@@ -33,7 +42,8 @@
     .date-lbl.sat { fill: #586069; }
     .date-lbl.active, .date-lbl:hover { fill: var(--text); font-weight: 700; }
     .pt { cursor: pointer; }
-    .info { margin-top: 8px; font-size: 0.85rem; color: var(--muted); }
+    .info { margin-top: 8px; font-size: 0.86rem; color: var(--muted); line-height: 1.4; }
+    .info strong { color: var(--text); font-weight: 600; }
 
     /* Day editor */
     .day-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
@@ -44,9 +54,9 @@
     .score-pill.m1 { color: #ffa198; border-color: var(--red); background: rgba(248,81,73,.15); }
 
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+    @media (max-width: 740px) { .grid-2 { grid-template-columns: 1fr; } }
 
-    .sec-title { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 10px; font-weight: 700; }
+    .sec-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 10px; font-weight: 700; }
     .chk-list { display: flex; flex-direction: column; gap: 8px; }
     .chk-item { display: flex; align-items: center; gap: 10px; background: var(--soft); border: 1px solid var(--border); padding: 10px 12px; border-radius: 10px; cursor: pointer; font-size: 0.92rem; transition: border-color .15s; }
     .chk-item:hover { border-color: #484f58; }
@@ -54,27 +64,49 @@
     .chk-item.auto-ok { border-color: rgba(46,160,67,.5); }
     .chk-item.auto-fail { border-color: rgba(248,81,73,.6); }
 
-    /* Calories */
-    .kcal-box { background: var(--soft); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+    /* Calories & Presets */
+    .kcal-box { background: var(--soft); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
     .kcal-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; margin-bottom: 8px; }
     .bar-bg { width: 100%; height: 8px; background: var(--bg); border-radius: 999px; overflow: hidden; }
     .bar-fill { height: 100%; background: var(--green); transition: width .2s, background .2s; }
     .bar-fill.over { background: var(--red); }
 
+    .presets-wrap { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+    .preset-chip { background: var(--bg); border: 1px solid var(--border); color: #c9d1d9; padding: 4px 8px; border-radius: 6px; font-size: 0.76rem; cursor: pointer; transition: border-color .15s; }
+    .preset-chip:hover { border-color: var(--blue); color: var(--text); }
+
     .meal-form { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
     input[type="date"], input[type="text"], input[type="number"] { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 10px; border-radius: 8px; font-size: 0.88rem; outline: none; }
     input[type="text"] { flex: 1; min-width: 120px; }
-    input[type="number"] { width: 92px; }
-    .btn { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+    input[type="number"] { width: 88px; }
+    .btn { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-weight: 600; font-size: 0.84rem; cursor: pointer; }
+    .btn:hover { border-color: #586069; }
     .btn-primary { background: var(--text); color: var(--bg); border: none; }
     .btn-del { color: var(--red); background: transparent; border: 1px solid var(--border); }
 
-    .meal-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; max-height: 180px; overflow-y: auto; }
-    .meal-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 6px 10px; background: var(--bg); border-radius: 7px; border: 1px solid var(--border); }
+    .meal-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; max-height: 170px; overflow-y: auto; }
+    .meal-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.84rem; padding: 6px 10px; background: var(--bg); border-radius: 7px; border: 1px solid var(--border); }
     .meal-rm { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 0 4px; }
     .meal-rm:hover { color: var(--red); }
 
+    .lesson-row { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
     .bottom-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+    /* Analytics & Weekly cards */
+    .card-header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .week-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    @media (max-width: 640px) { .week-metrics { grid-template-columns: repeat(2, 1fr); } }
+    .w-box { background: var(--soft); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+    .w-box .lbl { font-size: 0.78rem; color: var(--muted); }
+    .w-box .val { font-size: 1.15rem; font-weight: 700; margin-top: 2px; }
+
+    .habit-bars { display: flex; flex-direction: column; gap: 9px; }
+    .hb-row { display: flex; flex-direction: column; gap: 4px; }
+    .hb-top { display: flex; justify-content: space-between; font-size: 0.84rem; }
+    .hb-track { width: 100%; height: 6px; background: var(--soft); border-radius: 999px; overflow: hidden; }
+    .hb-fill { height: 100%; border-radius: 999px; transition: width .25s; }
+
+    .footer-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-top: 4px; }
     .lock-box { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     .hidden { display: none !important; }
   </style>
@@ -84,10 +116,20 @@
     <header>
       <div><h1>Трекер успішності</h1><div class="sub">21 листопада 2026 — 21 лютого 2027 · Субота — вихідний</div></div>
       <div class="h-right">
+        <button type="button" class="pill-btn" id="manifestoToggle">📜 Маніфест</button>
         <div class="badge"><span class="dot" id="dot"></span><span id="st">Підключення...</span></div>
-        <button type="button" class="auth-btn hidden" id="logoutBtn">Вийти</button>
+        <button type="button" class="pill-btn hidden" id="logoutBtn">Вийти</button>
       </div>
     </header>
+
+    <!-- Manifesto placeholder -->
+    <div class="manifesto-card hidden" id="manifestoCard">
+      <div class="manifesto-title">
+        <span>📜 Мій Маніфест (21.11.2026 — 21.02.2027)</span>
+        <button type="button" class="pill-btn" id="manifestoClose" style="padding:2px 9px; font-size:0.75rem;">Згорнути</button>
+      </div>
+      <div class="manifesto-body" id="manifestoText">Місце для твого маніфесту підготовлено. Коли сформулюєш текст — додамо його сюди, щоб завжди тримати фокус перед очима.</div>
+    </div>
 
     <div class="stats">
       <div><span class="sub">Баланс:</span><b id="sBal">0</b></div>
@@ -135,13 +177,23 @@
                 <span id="kcalLeft" style="color:var(--green); font-weight:600;">залишилось 2400</span>
               </div>
               <div class="bar-bg"><div class="bar-fill" id="kcalBar" style="width:0%"></div></div>
+
+              <div class="presets-wrap" id="presetsWrap">
+                <button type="button" class="preset-chip" data-name="Вівсянка на молоці" data-kcal="450">+ Вівсянка 450</button>
+                <button type="button" class="preset-chip" data-name="Варені яйця (2 шт)" data-kcal="150">+ 2 яйця 150</button>
+                <button type="button" class="preset-chip" data-name="Протеїн на молоці" data-kcal="250">+ Протеїн 250</button>
+                <button type="button" class="preset-chip" data-name="Куряча грудка + гречка" data-kcal="520">+ Курка+гречка 520</button>
+                <button type="button" class="preset-chip" data-name="Банан" data-kcal="100">+ Банан 100</button>
+                <button type="button" class="preset-chip" data-name="Суп" data-kcal="300">+ Суп 300</button>
+              </div>
+
               <div class="meal-form">
-                <input type="text" id="mealName" placeholder="Страва (необов'язково)" maxlength="60" />
+                <input type="text" id="mealName" placeholder="Інша страва..." maxlength="60" />
                 <input type="number" id="mealKcal" placeholder="ккал" min="0" max="5000" />
                 <button type="button" class="btn btn-primary" id="addMealBtn">+ Додати</button>
               </div>
               <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
-                <button type="button" class="btn" id="fastDayBtn" style="font-size:0.78rem; padding:5px 9px;">💧 День на воді (0 ккал)</button>
+                <button type="button" class="btn" id="fastDayBtn" style="font-size:0.78rem; padding:5px 9px;">💧 День на воді (піст)</button>
                 <span class="sub" id="foodStatusText" style="font-size:0.78rem;">Умову виконано ✓</span>
               </div>
               <ul class="meal-list" id="mealList"></ul>
@@ -170,14 +222,52 @@
           </div>
         </div>
 
+        <div class="lesson-row">
+          <input type="text" id="lessonInput" placeholder="Урок дня або причина збою (1 речення, необов'язково)..." maxlength="140" />
+        </div>
+
         <div class="bottom-actions">
-          <span class="sub" id="saveHint">Зміни зберігаються автоматично при додаванні їжі або натисканні кнопки.</span>
+          <span class="sub">Дані зберігаються автоматично.</span>
           <div style="display:flex; gap:8px;">
             <button type="button" class="btn btn-del hidden" id="delBtn">Скинути день</button>
             <button type="button" class="btn btn-primary" id="saveBtn">Зберегти день</button>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Weekly Scorecard & Weak Link Analytics -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header-row">
+          <div>
+            <div class="sec-title" style="margin-bottom:2px;">Підсумок тижня (Нд — Пт)</div>
+            <div class="sub" id="weekRangeLabel">—</div>
+          </div>
+          <button type="button" class="btn" id="copyWeekBtn" style="font-size:0.78rem; padding:5px 10px;">📋 Копіювати звіт</button>
+        </div>
+        <div class="week-metrics">
+          <div class="w-box"><div class="lbl">Виконання</div><div class="val" id="wPct">0%</div></div>
+          <div class="w-box"><div class="lbl">База (0 / +1)</div><div class="val" id="wBaseCount">0 / 6</div></div>
+          <div class="w-box"><div class="lbl">Inara Max</div><div class="val" style="color:var(--gold)" id="wMaxCount">0</div></div>
+          <div class="w-box"><div class="lbl">Серед. ккал</div><div class="val" id="wAvgKcal">0</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header-row">
+          <div>
+            <div class="sec-title" style="margin-bottom:2px;">Аналітика звичок (Слабка ланка)</div>
+            <div class="sub" id="analyticsSub">На основі заповнених днів</div>
+          </div>
+        </div>
+        <div class="habit-bars" id="habitBars"></div>
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <span class="sub">Хмарна синхронізація активна · 79 робочих днів у циклі</span>
+      <button type="button" class="btn" id="exportJsonBtn" style="font-size:0.78rem; padding:5px 10px;">⬇ Завантажити бекап (.json)</button>
     </div>
   </div>
 
@@ -200,7 +290,7 @@
     const provider = new GoogleAuthProvider();
     const entriesRef = ref(db, "entries");
 
-    const START = "2026-11-21", END = "2027-02-21", KEY = "tracker_v5";
+    const START = "2026-11-21", END = "2027-02-21", KEY = "tracker_v6";
     let entries = JSON.parse(localStorage.getItem(KEY) || "{}"), currentUser = null;
     let draftMeals = [];
 
@@ -210,10 +300,16 @@
     const loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn");
     const activeControls = document.getElementById("activeControls"), restMsg = document.getElementById("restMsg");
     const liveScoreEl = document.getElementById("liveScore"), delBtn = document.getElementById("delBtn"), saveBtn = document.getElementById("saveBtn");
+    const lessonInput = document.getElementById("lessonInput");
 
     const chkFood = document.getElementById("chkFood"), chkSober = document.getElementById("chkSober");
     const chkMove = document.getElementById("chkMove"), chkSleep = document.getElementById("chkSleep");
     const chkRead = document.getElementById("chkRead"), chkWorkout = document.getElementById("chkWorkout"), chkDuo = document.getElementById("chkDuo");
+
+    // Manifesto toggle
+    const manifestoCard = document.getElementById("manifestoCard");
+    document.getElementById("manifestoToggle").onclick = () => manifestoCard.classList.toggle("hidden");
+    document.getElementById("manifestoClose").onclick = () => manifestoCard.classList.add("hidden");
 
     const DAYS_UA = ["Неділя", "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота"];
     const isSaturday = iso => new Date(iso + "T00:00:00").getDay() === 6;
@@ -246,10 +342,7 @@
     };
 
     const computeInaraStreaks = () => {
-      let maxStreak = 0;
-      let running = 0;
-      let lastFilledIndex = -1;
-
+      let maxStreak = 0, running = 0, lastFilledIndex = -1;
       ACTIVE_DATES.forEach((iso, idx) => {
         const item = entries[iso];
         if (item !== undefined) lastFilledIndex = idx;
@@ -260,18 +353,11 @@
           running = 0;
         }
       });
-
-      // Current streak counts backwards from the latest logged active day
       let currentStreak = 0;
       for (let i = lastFilledIndex; i >= 0; i--) {
-        const item = entries[ACTIVE_DATES[i]];
-        if (isItemInaraMax(item)) {
-          currentStreak++;
-        } else {
-          break;
-        }
+        if (isItemInaraMax(entries[ACTIVE_DATES[i]])) currentStreak++;
+        else break;
       }
-
       return { currentStreak, maxStreak };
     };
 
@@ -294,8 +380,7 @@
       const foodBox = document.getElementById("foodAutoBox");
       const foodText = document.getElementById("foodStatusText");
 
-      const pct = Math.min(100, Math.round((kcal / 2400) * 100));
-      bar.style.width = pct + "%";
+      bar.style.width = Math.min(100, Math.round((kcal / 2400) * 100)) + "%";
       bar.classList.toggle("over", !foodOk);
 
       if (foodOk) {
@@ -344,9 +429,11 @@
       const iso = dIn.value;
       if (!iso || iso < START || iso > END || isSaturday(iso)) return;
       const { score, isMax } = computeDayState();
+      const lesson = lessonInput.value.trim();
       const payload = {
         score,
         isMax,
+        lesson,
         meals: draftMeals,
         habits: {
           sober: chkSober.checked,
@@ -364,8 +451,9 @@
         localStorage.setItem(KEY, JSON.stringify(entries));
         stats();
         draw();
+        updateWeeklyAndAnalytics(iso);
         delBtn.classList.remove("hidden");
-        info.textContent = `${fmt(iso)}: збережено (${score > 0 ? "+1" : score}${isMax ? " 🔥 Inara Max" : ""}, ${calcTotalKcal(draftMeals)} ккал).`;
+        info.innerHTML = `<strong>${fmt(iso)}:</strong> збережено (${score > 0 ? "+1" : score}${isMax ? " 🔥 Inara Max" : ""}, ${calcTotalKcal(draftMeals)} ккал)${lesson ? ` — «${lesson}»` : ""}.`;
       } catch (e) {
         alert("Помилка збереження. Перевірте права доступу в Firebase.");
       }
@@ -375,13 +463,14 @@
       dIn.value = iso;
       const dObj = new Date(iso + "T00:00:00");
       dayName.textContent = DAYS_UA[dObj.getDay()];
+      updateWeeklyAndAnalytics(iso);
 
       if (isSaturday(iso)) {
         activeControls.classList.add("hidden");
         restMsg.classList.remove("hidden");
         liveScoreEl.textContent = "Вихідний";
         liveScoreEl.className = "score-pill";
-        info.textContent = `${fmt(iso)} (Сб) — вихідний день. Повний відпочинок без оцінок.`;
+        info.innerHTML = `<strong>${fmt(iso)} (Сб):</strong> вихідний день. Повний відпочинок без оцінок.`;
         draw();
         return;
       }
@@ -399,9 +488,10 @@
         chkRead.checked = !!h.read;
         chkWorkout.checked = !!h.workout;
         chkDuo.checked = !!h.duo;
+        lessonInput.value = item.lesson || "";
         delBtn.classList.remove("hidden");
         const maxTag = isItemInaraMax(item) ? " 🔥 Inara Max" : "";
-        info.textContent = `${fmt(iso)}: оцінка ${item.score > 0 ? "+" + item.score : item.score}${maxTag} · ${calcTotalKcal(draftMeals)} ккал.`;
+        info.innerHTML = `<strong>${fmt(iso)}:</strong> оцінка ${item.score > 0 ? "+" + item.score : item.score}${maxTag} · ${calcTotalKcal(draftMeals)} ккал${item.lesson ? ` — «${item.lesson}»` : ""}.`;
       } else {
         draftMeals = [];
         chkSober.checked = false;
@@ -410,11 +500,106 @@
         chkRead.checked = false;
         chkWorkout.checked = false;
         chkDuo.checked = false;
+        lessonInput.value = "";
         delBtn.classList.add("hidden");
-        info.textContent = `${fmt(iso)}: запис ще не заповнено.`;
+        info.innerHTML = `<strong>${fmt(iso)}:</strong> запис ще не заповнено.`;
       }
       renderNutritionAndScore();
       draw();
+    };
+
+    // Weekly Scorecard (Sun-Fri cycle around selected date) & Habit Analytics
+    let lastWeekReportText = "";
+    const updateWeeklyAndAnalytics = focusIso => {
+      const d = new Date(focusIso + "T00:00:00");
+      const day = d.getDay(); // 0 = Sun ... 6 = Sat
+      const sun = new Date(d);
+      if (day === 6) sun.setDate(d.getDate() - 6);
+      else sun.setDate(d.getDate() - day);
+
+      const weekDays = [];
+      for (let i = 0; i < 6; i++) {
+        const cur = new Date(sun);
+        cur.setDate(sun.getDate() + i);
+        const iso = toIso(cur);
+        if (iso >= START && iso <= END && !isSaturday(iso)) weekDays.push(iso);
+      }
+
+      const startLbl = weekDays.length ? fmt(weekDays[0]) : fmt(focusIso);
+      const endLbl = weekDays.length ? fmt(weekDays[weekDays.length - 1]) : fmt(focusIso);
+      document.getElementById("weekRangeLabel").textContent = `${startLbl} — ${endLbl} (${weekDays.length} роб. дн.)`;
+
+      let baseOkDays = 0, plusDays = 0, maxDays = 0, kcalSum = 0, loggedWeekDays = 0;
+      weekDays.forEach(iso => {
+        const it = entries[iso];
+        if (it !== undefined) {
+          loggedWeekDays++;
+          const sc = Number(it.score);
+          if (sc >= 0) baseOkDays++;
+          if (sc === 1) plusDays++;
+          if (isItemInaraMax(it)) maxDays++;
+          kcalSum += calcTotalKcal(it.meals);
+        }
+      });
+
+      const denom = weekDays.length || 6;
+      const pct = Math.round((baseOkDays / denom) * 100);
+      const avgKcal = loggedWeekDays ? Math.round(kcalSum / loggedWeekDays) : 0;
+
+      document.getElementById("wPct").textContent = `${pct}%`;
+      document.getElementById("wBaseCount").textContent = `${baseOkDays} / ${denom}`;
+      document.getElementById("wMaxCount").textContent = maxDays;
+      document.getElementById("wAvgKcal").textContent = avgKcal;
+
+      const { currentStreak, maxStreak } = computeInaraStreaks();
+      lastWeekReportText = `📊 Звіт тижня (${startLbl} — ${endLbl}):\n• Виконання бази: ${baseOkDays}/${denom} (${pct}%)\n• Днів на +1: ${plusDays} (з них 🔥 Inara Max: ${maxDays})\n• Середня калорійність: ${avgKcal} ккал/день\n• Поточний Inara Streak: ${currentStreak} (рекорд: ${maxStreak})`;
+
+      // Habit weak link analytics across all logged active days
+      const loggedAll = ACTIVE_DATES.map(iso => entries[iso]).filter(Boolean);
+      const totalLogged = loggedAll.length;
+      document.getElementById("analyticsSub").textContent = totalLogged ? `Заповнено днів: ${totalLogged}` : "З'явиться після першого заповненого дня";
+
+      const metrics = [
+        { label: "Харчування ≤ 2400 ккал", count: loggedAll.filter(x => calcTotalKcal(x.meals) <= 2400).length, color: "var(--green)" },
+        { label: "Повна тверезість", count: loggedAll.filter(x => x.habits?.sober).length, color: "var(--green)" },
+        { label: "Руханка / йога 30 хв", count: loggedAll.filter(x => x.habits?.move).length, color: "var(--green)" },
+        { label: "Сон 7–8 годин", count: loggedAll.filter(x => x.habits?.sleep).length, color: "var(--green)" },
+        { label: "Читання ≥ 30 стор. (бонус)", count: loggedAll.filter(x => x.habits?.read).length, color: "var(--blue)" },
+        { label: "Тренування ≥ 30 хв (бонус)", count: loggedAll.filter(x => x.habits?.workout).length, color: "var(--blue)" },
+        { label: "Duolingo 10+ уроків (бонус)", count: loggedAll.filter(x => x.habits?.duo).length, color: "var(--blue)" }
+      ];
+
+      document.getElementById("habitBars").innerHTML = metrics.map(m => {
+        const p = totalLogged ? Math.round((m.count / totalLogged) * 100) : 0;
+        const barCol = totalLogged && p < 70 && m.color === "var(--green)" ? "var(--red)" : m.color;
+        return `
+          <div class="hb-row">
+            <div class="hb-top"><span>${m.label}</span><b>${p}% (${m.count}/${totalLogged})</b></div>
+            <div class="hb-track"><div class="hb-fill" style="width:${p}%; background:${barCol};"></div></div>
+          </div>
+        `;
+      }).join("");
+    };
+
+    document.getElementById("copyWeekBtn").onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(lastWeekReportText);
+        const btn = document.getElementById("copyWeekBtn");
+        btn.textContent = "✓ Скопійовано";
+        setTimeout(() => btn.textContent = "📋 Копіювати звіт", 1800);
+      } catch {
+        alert(lastWeekReportText);
+      }
+    };
+
+    document.getElementById("exportJsonBtn").onclick = () => {
+      const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `success-tracker-backup-${toIso(new Date())}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
     };
 
     const stats = () => {
@@ -479,6 +664,15 @@
       svg.querySelectorAll("[data-d]").forEach(el => el.onclick = () => loadDate(el.dataset.d));
     };
 
+    // Meal presets
+    document.querySelectorAll(".preset-chip").forEach(chip => {
+      chip.onclick = () => {
+        draftMeals.push({ name: chip.dataset.name, kcal: Number(chip.dataset.kcal) });
+        renderNutritionAndScore();
+        persistCurrentDay();
+      };
+    });
+
     document.getElementById("addMealBtn").onclick = () => {
       const kVal = Number(document.getElementById("mealKcal").value);
       const nVal = document.getElementById("mealName").value.trim();
@@ -503,6 +697,7 @@
       };
     });
 
+    lessonInput.onchange = persistCurrentDay;
     saveBtn.onclick = persistCurrentDay;
 
     delBtn.onclick = async () => {

@@ -28,6 +28,7 @@
     .chart-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     svg { width: 100%; min-width: 1150px; display: block; user-select: none; }
     .date-lbl { fill: var(--muted); font-size: 10px; cursor: pointer; }
+    .date-lbl.sat { fill: #586069; }
     .date-lbl.active, .date-lbl:hover { fill: var(--text); font-weight: 700; }
     .pt { cursor: pointer; }
     .info { margin-top: 8px; font-size: 0.85rem; color: var(--muted); }
@@ -43,6 +44,7 @@
     .save { background: var(--text); color: var(--bg); }
     .del { background: transparent; border: 1px solid var(--border); color: var(--red); display: none; }
     .del.show { display: inline-block; }
+    .rest-notice { color: var(--muted); font-size: 0.9rem; padding: 6px 4px; }
     .lock-box { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     .hidden { display: none !important; }
     @media (max-width: 640px) { .form { flex-direction: column; align-items: stretch; } .s-btn { flex: 1; } }
@@ -51,7 +53,7 @@
 <body>
   <div class="container">
     <header>
-      <div><h1>Трекер успішності</h1><div class="sub">21 листопада 2026 — 21 лютого 2027</div></div>
+      <div><h1>Трекер успішності</h1><div class="sub">21 листопада 2026 — 21 лютого 2027 · Субота — вихідний</div></div>
       <div class="h-right">
         <div class="badge"><span class="dot" id="dot"></span><span id="st">Підключення...</span></div>
         <button type="button" class="auth-btn hidden" id="logoutBtn">Вийти</button>
@@ -59,7 +61,7 @@
     </header>
     <div class="stats">
       <div><span class="sub">Баланс:</span><b id="sBal">0</b></div>
-      <div><span class="sub">Заповнено:</span><b id="sDays">0 / 93</b></div>
+      <div><span class="sub">Активних днів:</span><b id="sDays">0 / 79</b></div>
       <div><span class="sub">+1:</span><b style="color:var(--green)" id="sP">0</b></div>
       <div><span class="sub">0:</span><b style="color:var(--blue)" id="sZ">0</b></div>
       <div><span class="sub">-1:</span><b style="color:var(--red)" id="sM">0</b></div>
@@ -77,14 +79,17 @@
     <div class="card hidden" id="editCard">
       <div class="form">
         <input type="date" id="dIn" min="2026-11-21" max="2027-02-21" />
-        <div class="btns">
-          <button type="button" class="s-btn" data-v="1">+1</button>
-          <button type="button" class="s-btn sel" data-v="0">0</button>
-          <button type="button" class="s-btn" data-v="-1">-1</button>
+        <div id="activeControls" style="display:flex; flex-wrap:wrap; gap:8px; flex:1; align-items:center;">
+          <div class="btns">
+            <button type="button" class="s-btn" data-v="1">+1</button>
+            <button type="button" class="s-btn sel" data-v="0">0</button>
+            <button type="button" class="s-btn" data-v="-1">-1</button>
+          </div>
+          <input type="text" id="nIn" placeholder="Нотатка (необов'язково)..." maxlength="120" />
+          <button type="button" class="act save" id="saveBtn">Зберегти</button>
+          <button type="button" class="act del" id="delBtn">Видалити</button>
         </div>
-        <input type="text" id="nIn" placeholder="Нотатка (необов'язково)..." maxlength="120" />
-        <button type="button" class="act save" id="saveBtn">Зберегти</button>
-        <button type="button" class="act del" id="delBtn">Видалити</button>
+        <div id="restMsg" class="rest-notice hidden">Субота — день повного відпочинку (оцінка не вноситься).</div>
       </div>
     </div>
   </div>
@@ -107,7 +112,7 @@
     const provider = new GoogleAuthProvider();
     const entriesRef = ref(db, "entries");
 
-    const START = "2026-11-21", END = "2027-02-21", KEY = "tracker_v2";
+    const START = "2026-11-21", END = "2027-02-21", KEY = "tracker_v3";
     let entries = JSON.parse(localStorage.getItem(KEY) || "{}"), selScore = 0, currentUser = null;
 
     const dIn = document.getElementById("dIn"), nIn = document.getElementById("nIn");
@@ -115,19 +120,29 @@
     const info = document.getElementById("info"), dot = document.getElementById("dot"), st = document.getElementById("st");
     const lockCard = document.getElementById("lockCard"), editCard = document.getElementById("editCard");
     const loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn");
+    const activeControls = document.getElementById("activeControls"), restMsg = document.getElementById("restMsg");
     const sBtns = document.querySelectorAll(".s-btn");
+
+    const isSaturday = iso => new Date(iso + "T00:00:00").getDay() === 6;
 
     const DATES = [];
     for (let c = new Date(START + "T00:00:00"), e = new Date(END + "T00:00:00"); c <= e; c.setDate(c.getDate() + 1)) {
       DATES.push(`${c.getFullYear()}-${String(c.getMonth()+1).padStart(2,"0")}-${String(c.getDate()).padStart(2,"0")}`);
     }
-    const TOTAL_DAYS = DATES.length;
+    const ACTIVE_DATES = DATES.filter(d => !isSaturday(d));
+    const TOTAL_ACTIVE = ACTIVE_DATES.length;
 
     const fmt = iso => `${iso.slice(8,10)}.${iso.slice(5,7)}`;
-    const yest = () => {
-      const d = new Date(); d.setDate(d.getDate() - 1);
-      const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-      return iso < START ? START : iso > END ? END : iso;
+    const toIso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+
+    const defaultTargetDate = () => {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      if (d.getDay() === 6) d.setDate(d.getDate() - 1);
+      const iso = toIso(d);
+      if (iso < START) return "2026-11-22";
+      if (iso > END) return END;
+      return iso;
     };
 
     const setScore = v => {
@@ -137,6 +152,16 @@
 
     const loadDate = iso => {
       dIn.value = iso;
+      if (isSaturday(iso)) {
+        activeControls.classList.add("hidden");
+        restMsg.classList.remove("hidden");
+        info.textContent = `${fmt(iso)} (Сб) — вихідний день. Повний відпочинок без оцінок.`;
+        draw();
+        return;
+      }
+      activeControls.classList.remove("hidden");
+      restMsg.classList.add("hidden");
+
       const item = entries[iso];
       if (item) {
         setScore(item.score); nIn.value = item.note || "";
@@ -152,7 +177,7 @@
 
     const stats = () => {
       let p = 0, z = 0, m = 0, t = 0;
-      DATES.forEach(d => {
+      ACTIVE_DATES.forEach(d => {
         if (entries[d] !== undefined) {
           t++; const s = Number(entries[d].score);
           if (s === 1) p++; else if (s === 0) z++; else m++;
@@ -161,7 +186,7 @@
       const b = p - m, bal = document.getElementById("sBal");
       bal.textContent = b > 0 ? `+${b}` : b;
       bal.style.color = b > 0 ? "var(--green)" : b < 0 ? "var(--red)" : "var(--text)";
-      document.getElementById("sDays").textContent = `${t} / ${TOTAL_DAYS}`;
+      document.getElementById("sDays").textContent = `${t} / ${TOTAL_ACTIVE}`;
       document.getElementById("sP").textContent = p;
       document.getElementById("sZ").textContent = z;
       document.getElementById("sM").textContent = m;
@@ -169,7 +194,7 @@
 
     const draw = () => {
       const svg = document.getElementById("chart"), W = 1300, H = 250, pL = 34, pR = 20, pT = 24, pB = 34;
-      const yM = { "1": pT, "0": pT + (H-pT-pB)/2, "-1": H - pB }, step = (W - pL - pR) / (TOTAL_DAYS - 1);
+      const yM = { "1": pT, "0": pT + (H-pT-pB)/2, "-1": H - pB }, step = (W - pL - pR) / (DATES.length - 1);
       let h = "";
       ["1", "0", "-1"].forEach(v => {
         h += `<line x1="${pL}" y1="${yM[v]}" x2="${W-pR}" y2="${yM[v]}" stroke="${v==="0"?"#484f58":"#30363d"}" stroke-width="${v==="0"?1.5:1}" ${v==="0"?"":'stroke-dasharray="4 4"'} />`;
@@ -177,9 +202,16 @@
       });
       const pts = [];
       DATES.forEach((iso, i) => {
-        const x = pL + i * step, act = dIn.value === iso;
-        if (i % 4 === 0 || i === TOTAL_DAYS - 1 || act) h += `<text x="${x}" y="${H-10}" text-anchor="middle" class="date-lbl ${act?"active":""}" data-d="${iso}">${fmt(iso)}</text>`;
-        if (entries[iso] !== undefined) pts.push({ iso, x, y: yM[String(entries[iso].score)], s: Number(entries[iso].score) });
+        const x = pL + i * step, act = dIn.value === iso, sat = isSaturday(iso);
+        if (sat) {
+          h += `<line x1="${x}" y1="${pT}" x2="${x}" y2="${H-pB}" stroke="#21262d" stroke-width="1" />`;
+        }
+        if (i % 7 === 0 || i === DATES.length - 1 || act) {
+          h += `<text x="${x}" y="${H-10}" text-anchor="middle" class="date-lbl ${sat?"sat":""} ${act?"active":""}" data-d="${iso}">${sat ? "Сб " + fmt(iso) : fmt(iso)}</text>`;
+        }
+        if (!sat && entries[iso] !== undefined) {
+          pts.push({ iso, x, y: yM[String(entries[iso].score)], s: Number(entries[iso].score) });
+        }
       });
       for (let i = 0; i < pts.length - 1; i++) {
         const a = pts[i], b = pts[i+1], col = (a.s===-1||b.s===-1)?"#f85149":(a.s===1||b.s===1)?"#2ea043":"#388bfd";
@@ -216,7 +248,8 @@
     dIn.onchange = () => { if (dIn.value) loadDate(dIn.value); };
     saveBtn.onclick = async () => {
       if (!currentUser) return;
-      const iso = dIn.value; if (!iso || iso < START || iso > END) return;
+      const iso = dIn.value;
+      if (!iso || iso < START || iso > END || isSaturday(iso)) return;
       const data = { score: selScore, note: nIn.value.trim(), updatedAt: Date.now() };
       try {
         await set(ref(db, `entries/${iso}`), data);
@@ -228,7 +261,8 @@
     };
     delBtn.onclick = async () => {
       if (!currentUser) return;
-      const iso = dIn.value; if (!iso || !entries[iso]) return;
+      const iso = dIn.value;
+      if (!iso || !entries[iso] || isSaturday(iso)) return;
       try {
         await remove(ref(db, `entries/${iso}`));
         delete entries[iso]; localStorage.setItem(KEY, JSON.stringify(entries));
@@ -241,10 +275,10 @@
     onValue(entriesRef, snap => {
       entries = snap.val() || {}; localStorage.setItem(KEY, JSON.stringify(entries));
       dot.className = "dot online"; st.textContent = "Синхронізовано";
-      stats(); loadDate(dIn.value || yest());
+      stats(); loadDate(dIn.value || defaultTargetDate());
     }, () => { dot.className = "dot error"; st.textContent = "Доступ обмежено"; });
 
-    stats(); loadDate(yest());
+    stats(); loadDate(defaultTargetDate());
   </script>
 </body>
 </html>

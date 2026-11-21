@@ -214,8 +214,8 @@
           </div>
           <div class="date-big-wrap">
             <div class="date-big-row">
-              <span class="hero-date-text" id="heroDateTitle">22 листопада 2026</span>
-              <span class="hero-weekday" id="dayName">Неділя</span>
+              <span class="hero-date-text" id="heroDateTitle">21 листопада 2026</span>
+              <span class="hero-weekday" id="dayName">Субота</span>
             </div>
             <div style="display:flex; align-items:center; gap:8px; margin-top:3px;">
               <span class="sub" style="font-size:0.78rem;">Календар:</span>
@@ -223,7 +223,7 @@
             </div>
           </div>
         </div>
-        <div class="score-pill" id="liveScore">Оцінка дня: 0</div>
+        <div class="score-pill" id="liveScore">Вихідний</div>
       </div>
 
       <!-- 2. Daily Action Card (Nutrition + Habits) -->
@@ -430,10 +430,8 @@
     const toIso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 
     const todayOrNextActive = () => {
-      const d = new Date();
-      if (d.getDay() === 6) d.setDate(d.getDate() + 1);
-      const iso = toIso(d);
-      if (iso < START) return "2026-11-22";
+      const iso = toIso(new Date());
+      if (iso < START) return START;
       if (iso > END) return END;
       return iso;
     };

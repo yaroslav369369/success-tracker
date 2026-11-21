@@ -23,6 +23,12 @@
     .pill-btn { background: var(--soft); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
     .pill-btn:hover { border-color: #586069; }
 
+    /* Lock screen */
+    .lock-screen { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 44px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 12px; }
+    .lock-icon { font-size: 2.2rem; }
+    .lock-title { font-size: 1.15rem; font-weight: 700; }
+    .lock-desc { font-size: 0.9rem; color: var(--muted); max-width: 420px; line-height: 1.5; }
+
     /* Manifesto drawer */
     .manifesto-card { background: linear-gradient(180deg, #1b222c 0%, #161b22 100%); border: 1px solid #3d4754; border-radius: 14px; padding: 16px 18px; }
     .manifesto-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
@@ -81,7 +87,7 @@
     input[type="number"] { width: 88px; }
     .btn { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-weight: 600; font-size: 0.84rem; cursor: pointer; }
     .btn:hover { border-color: #586069; }
-    .btn-primary { background: var(--text); color: var(--bg); border: none; }
+    .btn-primary { background: var(--text); color: var(--bg); border: none; padding: 10px 18px; font-size: 0.9rem; }
     .btn-del { color: var(--red); background: transparent; border: 1px solid var(--border); }
 
     .meal-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; max-height: 170px; overflow-y: auto; }
@@ -107,7 +113,6 @@
     .hb-fill { height: 100%; border-radius: 999px; transition: width .25s; }
 
     .footer-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-top: 4px; }
-    .lock-box { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     .hidden { display: none !important; }
   </style>
 </head>
@@ -116,164 +121,169 @@
     <header>
       <div><h1>Трекер успішності</h1><div class="sub">21 листопада 2026 — 21 лютого 2027 · Субота — вихідний</div></div>
       <div class="h-right">
-        <button type="button" class="pill-btn" id="manifestoToggle">📜 Маніфест</button>
-        <div class="badge"><span class="dot" id="dot"></span><span id="st">Підключення...</span></div>
+        <button type="button" class="pill-btn hidden" id="manifestoToggle">📜 Маніфест</button>
+        <div class="badge"><span class="dot" id="dot"></span><span id="st">Очікування входу</span></div>
         <button type="button" class="pill-btn hidden" id="logoutBtn">Вийти</button>
       </div>
     </header>
 
-    <!-- Manifesto placeholder -->
-    <div class="manifesto-card hidden" id="manifestoCard">
-      <div class="manifesto-title">
-        <span>📜 Мій Маніфест (21.11.2026 — 21.02.2027)</span>
-        <button type="button" class="pill-btn" id="manifestoClose" style="padding:2px 9px; font-size:0.75rem;">Згорнути</button>
-      </div>
-      <div class="manifesto-body" id="manifestoText">Місце для твого маніфесту підготовлено. Коли сформулюєш текст — додамо його сюди, щоб завжди тримати фокус перед очима.</div>
+    <!-- Private Lock Screen -->
+    <div class="lock-screen" id="lockCard">
+      <div class="lock-icon">🔒</div>
+      <div class="lock-title">Приватний простір</div>
+      <div class="lock-desc">Доступ до графіка, щоденних показників, аналітики звичок та раціону закрито. Увійдіть у свій акаунт Google, щоб продовжити.</div>
+      <button type="button" class="btn btn-primary" id="loginBtn">Увійти через Google</button>
+      <div class="sub hidden" id="authErrorMsg" style="color:var(--red); margin-top:4px;"></div>
     </div>
 
-    <div class="stats">
-      <div><span class="sub">Баланс:</span><b id="sBal">0</b></div>
-      <div><span class="sub">Днів:</span><b id="sDays">0 / 79</b></div>
-      <div><span class="sub">+1:</span><b style="color:var(--green)" id="sP">0</b></div>
-      <div><span class="sub">0:</span><b style="color:var(--blue)" id="sZ">0</b></div>
-      <div><span class="sub">-1:</span><b style="color:var(--red)" id="sM">0</b></div>
-      <div class="inara-pill" title="Серія днів на абсолютний максимум (База + усі 3 бонусні пункти)">
-        🔥 Inara Streak: <b id="sInaraCur">0</b>
-        <span class="inara-rec">(рекорд: <span id="sInaraMax">0</span>)</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="chart-wrap"><svg id="chart" viewBox="0 0 1300 250"></svg></div>
-      <div class="info" id="info">Натисніть на дату на графіку, щоб переглянути запис.</div>
-    </div>
-
-    <div class="card" id="lockCard">
-      <div class="lock-box">
-        <span class="sub">Режим перегляду. Щоб вносити прийоми їжі та відмічати звички, увійдіть у свій акаунт.</span>
-        <button type="button" class="btn btn-primary" id="loginBtn">Увійти через Google</button>
-      </div>
-    </div>
-
-    <div class="card hidden" id="editCard">
-      <div class="day-top">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <input type="date" id="dIn" min="2026-11-21" max="2027-02-21" />
-          <span class="sub" id="dayName"></span>
+    <!-- Protected App Workspace -->
+    <div id="appWorkspace" class="hidden" style="display:flex; flex-direction:column; gap:14px;">
+      <!-- Manifesto placeholder -->
+      <div class="manifesto-card hidden" id="manifestoCard">
+        <div class="manifesto-title">
+          <span>📜 Мій Маніфест (21.11.2026 — 21.02.2027)</span>
+          <button type="button" class="pill-btn" id="manifestoClose" style="padding:2px 9px; font-size:0.75rem;">Згорнути</button>
         </div>
-        <div class="score-pill" id="liveScore">Оцінка дня: 0</div>
+        <div class="manifesto-body" id="manifestoText">Місце для твого маніфесту підготовлено. Коли сформулюєш текст — додамо його сюди, щоб завжди тримати фокус перед очима.</div>
       </div>
 
-      <div id="restMsg" class="sub hidden" style="padding: 8px 0;">Субота — день повного відпочинку. Калорії та звички не фіксуються (Inara Streak не згорає).</div>
-
-      <div id="activeControls">
-        <div class="grid-2">
-          <!-- Left: Nutrition -->
-          <div>
-            <div class="sec-title">1. Харчування (до 2400 ккал)</div>
-            <div class="kcal-box">
-              <div class="kcal-head">
-                <span>Всього: <b id="kcalTotal">0</b> / 2400 ккал</span>
-                <span id="kcalLeft" style="color:var(--green); font-weight:600;">залишилось 2400</span>
-              </div>
-              <div class="bar-bg"><div class="bar-fill" id="kcalBar" style="width:0%"></div></div>
-
-              <div class="presets-wrap" id="presetsWrap">
-                <button type="button" class="preset-chip" data-name="Вівсянка на молоці" data-kcal="450">+ Вівсянка 450</button>
-                <button type="button" class="preset-chip" data-name="Варені яйця (2 шт)" data-kcal="150">+ 2 яйця 150</button>
-                <button type="button" class="preset-chip" data-name="Протеїн на молоці" data-kcal="250">+ Протеїн 250</button>
-                <button type="button" class="preset-chip" data-name="Куряча грудка + гречка" data-kcal="520">+ Курка+гречка 520</button>
-                <button type="button" class="preset-chip" data-name="Банан" data-kcal="100">+ Банан 100</button>
-                <button type="button" class="preset-chip" data-name="Суп" data-kcal="300">+ Суп 300</button>
-              </div>
-
-              <div class="meal-form">
-                <input type="text" id="mealName" placeholder="Інша страва..." maxlength="60" />
-                <input type="number" id="mealKcal" placeholder="ккал" min="0" max="5000" />
-                <button type="button" class="btn btn-primary" id="addMealBtn">+ Додати</button>
-              </div>
-              <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
-                <button type="button" class="btn" id="fastDayBtn" style="font-size:0.78rem; padding:5px 9px;">💧 День на воді (піст)</button>
-                <span class="sub" id="foodStatusText" style="font-size:0.78rem;">Умову виконано ✓</span>
-              </div>
-              <ul class="meal-list" id="mealList"></ul>
-            </div>
-          </div>
-
-          <!-- Right: Habits -->
-          <div>
-            <div class="sec-title">2. Базовий рівень (потрібно все)</div>
-            <div class="chk-list" style="margin-bottom:14px;">
-              <div class="chk-item auto-ok" id="foodAutoBox" style="cursor:default;">
-                <input type="checkbox" id="chkFood" checked disabled />
-                <span>Харчування до 2400 ккал/день</span>
-              </div>
-              <label class="chk-item"><input type="checkbox" id="chkSober" /><span>Повна тверезість</span></label>
-              <label class="chk-item"><input type="checkbox" id="chkMove" /><span>Руханка / йога 30 хв</span></label>
-              <label class="chk-item"><input type="checkbox" id="chkSleep" /><span>Сон 7–8 годин</span></label>
-            </div>
-
-            <div class="sec-title">3. Бонус на +1 (усі 3 = 🔥 Inara Streak)</div>
-            <div class="chk-list">
-              <label class="chk-item"><input type="checkbox" id="chkRead" /><span>Читання від 30 сторінок</span></label>
-              <label class="chk-item"><input type="checkbox" id="chkWorkout" /><span>Силове або бігове тренування ≥ 30 хв</span></label>
-              <label class="chk-item"><input type="checkbox" id="chkDuo" /><span>10+ уроків у Duolingo</span></label>
-            </div>
-          </div>
-        </div>
-
-        <div class="lesson-row">
-          <input type="text" id="lessonInput" placeholder="Урок дня або причина збою (1 речення, необов'язково)..." maxlength="140" />
-        </div>
-
-        <div class="bottom-actions">
-          <span class="sub">Дані зберігаються автоматично.</span>
-          <div style="display:flex; gap:8px;">
-            <button type="button" class="btn btn-del hidden" id="delBtn">Скинути день</button>
-            <button type="button" class="btn btn-primary" id="saveBtn">Зберегти день</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Weekly Scorecard & Weak Link Analytics -->
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-header-row">
-          <div>
-            <div class="sec-title" style="margin-bottom:2px;">Підсумок тижня (Нд — Пт)</div>
-            <div class="sub" id="weekRangeLabel">—</div>
-          </div>
-          <button type="button" class="btn" id="copyWeekBtn" style="font-size:0.78rem; padding:5px 10px;">📋 Копіювати звіт</button>
-        </div>
-        <div class="week-metrics">
-          <div class="w-box"><div class="lbl">Виконання</div><div class="val" id="wPct">0%</div></div>
-          <div class="w-box"><div class="lbl">База (0 / +1)</div><div class="val" id="wBaseCount">0 / 6</div></div>
-          <div class="w-box"><div class="lbl">Inara Max</div><div class="val" style="color:var(--gold)" id="wMaxCount">0</div></div>
-          <div class="w-box"><div class="lbl">Серед. ккал</div><div class="val" id="wAvgKcal">0</div></div>
+      <div class="stats">
+        <div><span class="sub">Баланс:</span><b id="sBal">0</b></div>
+        <div><span class="sub">Днів:</span><b id="sDays">0 / 79</b></div>
+        <div><span class="sub">+1:</span><b style="color:var(--green)" id="sP">0</b></div>
+        <div><span class="sub">0:</span><b style="color:var(--blue)" id="sZ">0</b></div>
+        <div><span class="sub">-1:</span><b style="color:var(--red)" id="sM">0</b></div>
+        <div class="inara-pill" title="Серія днів на абсолютний максимум (База + усі 3 бонусні пункти)">
+          🔥 Inara Streak: <b id="sInaraCur">0</b>
+          <span class="inara-rec">(рекорд: <span id="sInaraMax">0</span>)</span>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-header-row">
-          <div>
-            <div class="sec-title" style="margin-bottom:2px;">Аналітика звичок (Слабка ланка)</div>
-            <div class="sub" id="analyticsSub">На основі заповнених днів</div>
+        <div class="chart-wrap"><svg id="chart" viewBox="0 0 1300 250"></svg></div>
+        <div class="info" id="info">Натисніть на дату на графіку, щоб переглянути запис.</div>
+      </div>
+
+      <div class="card" id="editCard">
+        <div class="day-top">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="date" id="dIn" min="2026-11-21" max="2027-02-21" />
+            <span class="sub" id="dayName"></span>
+          </div>
+          <div class="score-pill" id="liveScore">Оцінка дня: 0</div>
+        </div>
+
+        <div id="restMsg" class="sub hidden" style="padding: 8px 0;">Субота — день повного відпочинку. Калорії та звички не фіксуються (Inara Streak не згорає).</div>
+
+        <div id="activeControls">
+          <div class="grid-2">
+            <!-- Left: Nutrition -->
+            <div>
+              <div class="sec-title">1. Харчування (до 2400 ккал)</div>
+              <div class="kcal-box">
+                <div class="kcal-head">
+                  <span>Всього: <b id="kcalTotal">0</b> / 2400 ккал</span>
+                  <span id="kcalLeft" style="color:var(--green); font-weight:600;">залишилось 2400</span>
+                </div>
+                <div class="bar-bg"><div class="bar-fill" id="kcalBar" style="width:0%"></div></div>
+
+                <div class="presets-wrap" id="presetsWrap">
+                  <button type="button" class="preset-chip" data-name="Вівсянка на молоці" data-kcal="450">+ Вівсянка 450</button>
+                  <button type="button" class="preset-chip" data-name="Варені яйця (2 шт)" data-kcal="150">+ 2 яйця 150</button>
+                  <button type="button" class="preset-chip" data-name="Протеїн на молоці" data-kcal="250">+ Протеїн 250</button>
+                  <button type="button" class="preset-chip" data-name="Куряча грудка + гречка" data-kcal="520">+ Курка+гречка 520</button>
+                  <button type="button" class="preset-chip" data-name="Банан" data-kcal="100">+ Банан 100</button>
+                  <button type="button" class="preset-chip" data-name="Суп" data-kcal="300">+ Суп 300</button>
+                </div>
+
+                <div class="meal-form">
+                  <input type="text" id="mealName" placeholder="Інша страва..." maxlength="60" />
+                  <input type="number" id="mealKcal" placeholder="ккал" min="0" max="5000" />
+                  <button type="button" class="btn btn-primary" style="padding:8px 12px; font-size:0.84rem;" id="addMealBtn">+ Додати</button>
+                </div>
+                <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
+                  <button type="button" class="btn" id="fastDayBtn" style="font-size:0.78rem; padding:5px 9px;">💧 День на воді (піст)</button>
+                  <span class="sub" id="foodStatusText" style="font-size:0.78rem;">Умову виконано ✓</span>
+                </div>
+                <ul class="meal-list" id="mealList"></ul>
+              </div>
+            </div>
+
+            <!-- Right: Habits -->
+            <div>
+              <div class="sec-title">2. Базовий рівень (потрібно все)</div>
+              <div class="chk-list" style="margin-bottom:14px;">
+                <div class="chk-item auto-ok" id="foodAutoBox" style="cursor:default;">
+                  <input type="checkbox" id="chkFood" checked disabled />
+                  <span>Харчування до 2400 ккал/день</span>
+                </div>
+                <label class="chk-item"><input type="checkbox" id="chkSober" /><span>Повна тверезість</span></label>
+                <label class="chk-item"><input type="checkbox" id="chkMove" /><span>Руханка / йога 30 хв</span></label>
+                <label class="chk-item"><input type="checkbox" id="chkSleep" /><span>Сон 7–8 годин</span></label>
+              </div>
+
+              <div class="sec-title">3. Бонус на +1 (усі 3 = 🔥 Inara Streak)</div>
+              <div class="chk-list">
+                <label class="chk-item"><input type="checkbox" id="chkRead" /><span>Читання від 30 сторінок</span></label>
+                <label class="chk-item"><input type="checkbox" id="chkWorkout" /><span>Силове або бігове тренування ≥ 30 хв</span></label>
+                <label class="chk-item"><input type="checkbox" id="chkDuo" /><span>10+ уроків у Duolingo</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="lesson-row">
+            <input type="text" id="lessonInput" placeholder="Урок дня або причина збою (1 речення, необов'язково)..." maxlength="140" />
+          </div>
+
+          <div class="bottom-actions">
+            <span class="sub">Дані зберігаються автоматично.</span>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn btn-del hidden" id="delBtn">Скинути день</button>
+              <button type="button" class="btn btn-primary" style="padding:8px 12px; font-size:0.84rem;" id="saveBtn">Зберегти день</button>
+            </div>
           </div>
         </div>
-        <div class="habit-bars" id="habitBars"></div>
       </div>
-    </div>
 
-    <div class="footer-bar">
-      <span class="sub">Хмарна синхронізація активна · 79 робочих днів у циклі</span>
-      <button type="button" class="btn hidden" id="exportJsonBtn" style="font-size:0.78rem; padding:5px 10px;">⬇ Завантажити бекап (.json)</button>
+      <!-- Weekly Scorecard & Weak Link Analytics -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header-row">
+            <div>
+              <div class="sec-title" style="margin-bottom:2px;">Підсумок тижня (Нд — Пт)</div>
+              <div class="sub" id="weekRangeLabel">—</div>
+            </div>
+            <button type="button" class="btn" id="copyWeekBtn" style="font-size:0.78rem; padding:5px 10px;">📋 Копіювати звіт</button>
+          </div>
+          <div class="week-metrics">
+            <div class="w-box"><div class="lbl">Виконання</div><div class="val" id="wPct">0%</div></div>
+            <div class="w-box"><div class="lbl">База (0 / +1)</div><div class="val" id="wBaseCount">0 / 6</div></div>
+            <div class="w-box"><div class="lbl">Inara Max</div><div class="val" style="color:var(--gold)" id="wMaxCount">0</div></div>
+            <div class="w-box"><div class="lbl">Серед. ккал</div><div class="val" id="wAvgKcal">0</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header-row">
+            <div>
+              <div class="sec-title" style="margin-bottom:2px;">Аналітика звичок (Слабка ланка)</div>
+              <div class="sub" id="analyticsSub">На основі заповнених днів</div>
+            </div>
+          </div>
+          <div class="habit-bars" id="habitBars"></div>
+        </div>
+      </div>
+
+      <div class="footer-bar">
+        <span class="sub">Хмарна синхронізація активна · Приватний доступ</span>
+        <button type="button" class="btn" id="exportJsonBtn" style="font-size:0.78rem; padding:5px 10px;">⬇ Завантажити бекап (.json)</button>
+      </div>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, set, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
     import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const app = initializeApp({
@@ -290,15 +300,14 @@
     const provider = new GoogleAuthProvider();
     const entriesRef = ref(db, "entries");
 
-    const START = "2026-11-21", END = "2027-02-21", KEY = "tracker_v6";
-    let entries = JSON.parse(localStorage.getItem(KEY) || "{}"), currentUser = null;
-    let draftMeals = [];
+    const START = "2026-11-21", END = "2027-02-21", KEY = "tracker_private_v1";
+    let entries = {}, currentUser = null, draftMeals = [], dbSubscribed = false;
 
     const dIn = document.getElementById("dIn"), dayName = document.getElementById("dayName");
     const info = document.getElementById("info"), dot = document.getElementById("dot"), st = document.getElementById("st");
-    const lockCard = document.getElementById("lockCard"), editCard = document.getElementById("editCard");
+    const lockCard = document.getElementById("lockCard"), appWorkspace = document.getElementById("appWorkspace");
     const loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn");
-    const exportJsonBtn = document.getElementById("exportJsonBtn");
+    const manifestoToggle = document.getElementById("manifestoToggle"), authErrorMsg = document.getElementById("authErrorMsg");
     const activeControls = document.getElementById("activeControls"), restMsg = document.getElementById("restMsg");
     const liveScoreEl = document.getElementById("liveScore"), delBtn = document.getElementById("delBtn"), saveBtn = document.getElementById("saveBtn");
     const lessonInput = document.getElementById("lessonInput");
@@ -307,9 +316,8 @@
     const chkMove = document.getElementById("chkMove"), chkSleep = document.getElementById("chkSleep");
     const chkRead = document.getElementById("chkRead"), chkWorkout = document.getElementById("chkWorkout"), chkDuo = document.getElementById("chkDuo");
 
-    // Manifesto toggle
     const manifestoCard = document.getElementById("manifestoCard");
-    document.getElementById("manifestoToggle").onclick = () => manifestoCard.classList.toggle("hidden");
+    manifestoToggle.onclick = () => manifestoCard.classList.toggle("hidden");
     document.getElementById("manifestoClose").onclick = () => manifestoCard.classList.add("hidden");
 
     const DAYS_UA = ["Неділя", "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота"];
@@ -509,7 +517,6 @@
       draw();
     };
 
-    // Weekly Scorecard (Sun-Fri cycle around selected date) & Habit Analytics
     let lastWeekReportText = "";
     const updateWeeklyAndAnalytics = focusIso => {
       const d = new Date(focusIso + "T00:00:00");
@@ -592,7 +599,7 @@
       }
     };
 
-    exportJsonBtn.onclick = () => {
+    document.getElementById("exportJsonBtn").onclick = () => {
       if (!currentUser) return;
       const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -665,7 +672,6 @@
       svg.querySelectorAll("[data-d]").forEach(el => el.onclick = () => loadDate(el.dataset.d));
     };
 
-    // Meal presets
     document.querySelectorAll(".preset-chip").forEach(chip => {
       chip.onclick = () => {
         draftMeals.push({ name: chip.dataset.name, kcal: Number(chip.dataset.kcal) });
@@ -716,39 +722,77 @@
       }
     };
 
-    loginBtn.onclick = async () => {
-      try { await signInWithPopup(auth, provider); } catch (e) { alert("Помилка входу: " + e.message); }
+    const startSync = () => {
+      if (dbSubscribed) return;
+      dbSubscribed = true;
+      dot.className = "dot"; st.textContent = "Завантаження...";
+      onValue(entriesRef, snap => {
+        entries = snap.val() || {};
+        localStorage.setItem(KEY, JSON.stringify(entries));
+        dot.className = "dot online"; st.textContent = "Синхронізовано";
+        authErrorMsg.classList.add("hidden");
+        stats();
+        loadDate(dIn.value || todayOrNextActive());
+      }, () => {
+        dot.className = "dot error"; st.textContent = "Немає доступу";
+        appWorkspace.classList.add("hidden");
+        lockCard.classList.remove("hidden");
+        authErrorMsg.textContent = "Цей Google-акаунт не має прав доступу до бази даних.";
+        authErrorMsg.classList.remove("hidden");
+      });
     };
-    logoutBtn.onclick = () => signOut(auth);
+
+    const stopSync = () => {
+      if (dbSubscribed) {
+        off(entriesRef);
+        dbSubscribed = false;
+      }
+      entries = {};
+      localStorage.removeItem(KEY);
+      localStorage.removeItem("tracker_v2");
+      localStorage.removeItem("tracker_v3");
+      localStorage.removeItem("tracker_v4");
+      localStorage.removeItem("tracker_v5");
+      localStorage.removeItem("tracker_v6");
+    };
+
+    loginBtn.onclick = async () => {
+      authErrorMsg.classList.add("hidden");
+      try { await signInWithPopup(auth, provider); } catch (e) {
+        authErrorMsg.textContent = "Помилка входу: " + e.message;
+        authErrorMsg.classList.remove("hidden");
+      }
+    };
+
+    logoutBtn.onclick = () => {
+      stopSync();
+      signOut(auth);
+    };
 
     onAuthStateChanged(auth, user => {
       currentUser = user;
       if (user) {
+        entries = JSON.parse(localStorage.getItem(KEY) || "{}");
         lockCard.classList.add("hidden");
-        editCard.classList.remove("hidden");
+        appWorkspace.classList.remove("hidden");
         logoutBtn.classList.remove("hidden");
-        exportJsonBtn.classList.remove("hidden");
+        manifestoToggle.classList.remove("hidden");
         logoutBtn.textContent = `Вийти (${user.email})`;
+        stats();
+        loadDate(dIn.value || todayOrNextActive());
+        startSync();
       } else {
-        lockCard.classList.remove("hidden");
-        editCard.classList.add("hidden");
+        stopSync();
+        appWorkspace.classList.add("hidden");
+        manifestoCard.classList.add("hidden");
+        manifestoToggle.classList.add("hidden");
         logoutBtn.classList.add("hidden");
-        exportJsonBtn.classList.add("hidden");
+        lockCard.classList.remove("hidden");
+        dot.className = "dot"; st.textContent = "Очікування входу";
       }
     });
 
     dIn.onchange = () => { if (dIn.value) loadDate(dIn.value); };
-
-    onValue(entriesRef, snap => {
-      entries = snap.val() || {};
-      localStorage.setItem(KEY, JSON.stringify(entries));
-      dot.className = "dot online"; st.textContent = "Синхронізовано";
-      stats();
-      loadDate(dIn.value || todayOrNextActive());
-    }, () => { dot.className = "dot error"; st.textContent = "Доступ обмежено"; });
-
-    stats();
-    loadDate(todayOrNextActive());
   </script>
 </body>
 </html>

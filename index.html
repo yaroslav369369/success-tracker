@@ -267,7 +267,7 @@
 
     <div class="footer-bar">
       <span class="sub">Хмарна синхронізація активна · 79 робочих днів у циклі</span>
-      <button type="button" class="btn" id="exportJsonBtn" style="font-size:0.78rem; padding:5px 10px;">⬇ Завантажити бекап (.json)</button>
+      <button type="button" class="btn hidden" id="exportJsonBtn" style="font-size:0.78rem; padding:5px 10px;">⬇ Завантажити бекап (.json)</button>
     </div>
   </div>
 
@@ -298,6 +298,7 @@
     const info = document.getElementById("info"), dot = document.getElementById("dot"), st = document.getElementById("st");
     const lockCard = document.getElementById("lockCard"), editCard = document.getElementById("editCard");
     const loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn");
+    const exportJsonBtn = document.getElementById("exportJsonBtn");
     const activeControls = document.getElementById("activeControls"), restMsg = document.getElementById("restMsg");
     const liveScoreEl = document.getElementById("liveScore"), delBtn = document.getElementById("delBtn"), saveBtn = document.getElementById("saveBtn");
     const lessonInput = document.getElementById("lessonInput");
@@ -512,7 +513,7 @@
     let lastWeekReportText = "";
     const updateWeeklyAndAnalytics = focusIso => {
       const d = new Date(focusIso + "T00:00:00");
-      const day = d.getDay(); // 0 = Sun ... 6 = Sat
+      const day = d.getDay();
       const sun = new Date(d);
       if (day === 6) sun.setDate(d.getDate() - 6);
       else sun.setDate(d.getDate() - day);
@@ -554,7 +555,6 @@
       const { currentStreak, maxStreak } = computeInaraStreaks();
       lastWeekReportText = `📊 Звіт тижня (${startLbl} — ${endLbl}):\n• Виконання бази: ${baseOkDays}/${denom} (${pct}%)\n• Днів на +1: ${plusDays} (з них 🔥 Inara Max: ${maxDays})\n• Середня калорійність: ${avgKcal} ккал/день\n• Поточний Inara Streak: ${currentStreak} (рекорд: ${maxStreak})`;
 
-      // Habit weak link analytics across all logged active days
       const loggedAll = ACTIVE_DATES.map(iso => entries[iso]).filter(Boolean);
       const totalLogged = loggedAll.length;
       document.getElementById("analyticsSub").textContent = totalLogged ? `Заповнено днів: ${totalLogged}` : "З'явиться після першого заповненого дня";
@@ -592,7 +592,8 @@
       }
     };
 
-    document.getElementById("exportJsonBtn").onclick = () => {
+    exportJsonBtn.onclick = () => {
+      if (!currentUser) return;
       const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -726,11 +727,13 @@
         lockCard.classList.add("hidden");
         editCard.classList.remove("hidden");
         logoutBtn.classList.remove("hidden");
+        exportJsonBtn.classList.remove("hidden");
         logoutBtn.textContent = `Вийти (${user.email})`;
       } else {
         lockCard.classList.remove("hidden");
         editCard.classList.add("hidden");
         logoutBtn.classList.add("hidden");
+        exportJsonBtn.classList.add("hidden");
       }
     });
 

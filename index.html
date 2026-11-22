@@ -24,6 +24,7 @@
     .dot.error { background: var(--red); }
     .pill-btn { background: var(--soft); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: border-color .15s; }
     .pill-btn:hover { border-color: #586069; }
+    .auth-pill-group { display: inline-flex; align-items: center; gap: 4px; }
 
     /* Lock screen */
     .lock-screen { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 12px; }
@@ -180,7 +181,10 @@
       <div class="h-right">
         <button type="button" class="pill-btn hidden" id="manifestoToggle">📜 Маніфест</button>
         <div class="badge"><span class="dot" id="dot"></span><span id="st">Очікування входу</span></div>
-        <button type="button" class="pill-btn hidden" id="logoutBtn">Вийти</button>
+        <div class="auth-pill-group hidden" id="authGroup">
+          <button type="button" class="pill-btn" id="toggleEmailBtn" title="Показати або приховати пошту" style="padding:6px 9px;">👁️</button>
+          <button type="button" class="pill-btn" id="logoutBtn">Вийти</button>
+        </div>
       </div>
     </header>
 
@@ -389,18 +393,33 @@
     const entriesRef = ref(db, "entries");
     const booksRef = ref(db, "books");
 
-    const START = "2026-11-21", END = "2027-02-21", KEY = "tracker_private_v2", BOOKS_KEY = "tracker_books_v1";
+    const START = "2026-11-21", END = "2027-02-21", KEY = "tracker_private_v2", BOOKS_KEY = "tracker_books_v1", EMAIL_VIS_KEY = "tracker_show_email";
     const defaultBooks = () => Array.from({ length: 6 }, () => ({ title: "", startDate: "", endDate: "" }));
     let entries = {}, books = defaultBooks(), currentUser = null, draftMeals = [], dbSubscribed = false;
+    let showEmail = localStorage.getItem(EMAIL_VIS_KEY) === "true";
 
     const dIn = document.getElementById("dIn"), dayName = document.getElementById("dayName"), heroDateTitle = document.getElementById("heroDateTitle");
     const info = document.getElementById("info"), dot = document.getElementById("dot"), st = document.getElementById("st");
     const lockCard = document.getElementById("lockCard"), appWorkspace = document.getElementById("appWorkspace");
     const loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn");
+    const authGroup = document.getElementById("authGroup"), toggleEmailBtn = document.getElementById("toggleEmailBtn");
     const manifestoToggle = document.getElementById("manifestoToggle"), authErrorMsg = document.getElementById("authErrorMsg");
     const activeControls = document.getElementById("activeControls"), restMsg = document.getElementById("restMsg");
     const liveScoreEl = document.getElementById("liveScore"), delBtn = document.getElementById("delBtn"), saveBtn = document.getElementById("saveBtn");
     const lessonInput = document.getElementById("lessonInput");
+
+    const updateAuthBtnDisplay = () => {
+      if (!currentUser) return;
+      logoutBtn.textContent = showEmail ? `Вийти (${currentUser.email})` : "Вийти";
+      toggleEmailBtn.textContent = showEmail ? "🙈" : "👁️";
+      toggleEmailBtn.title = showEmail ? "Приховати пошту" : "Показати пошту";
+    };
+
+    toggleEmailBtn.onclick = () => {
+      showEmail = !showEmail;
+      localStorage.setItem(EMAIL_VIS_KEY, String(showEmail));
+      updateAuthBtnDisplay();
+    };
 
     const chkFood = document.getElementById("chkFood"), chkNoFastfood = document.getElementById("chkNoFastfood");
     const chkSober = document.getElementById("chkSober"), chkMove = document.getElementById("chkMove"), chkSleep = document.getElementById("chkSleep");
@@ -1012,9 +1031,9 @@
         books = Array.isArray(savedBooks) && savedBooks.length === 6 ? savedBooks : defaultBooks();
         lockCard.classList.add("hidden");
         appWorkspace.classList.remove("hidden");
-        logoutBtn.classList.remove("hidden");
+        authGroup.classList.remove("hidden");
         manifestoToggle.classList.remove("hidden");
-        logoutBtn.textContent = `Вийти (${user.email})`;
+        updateAuthBtnDisplay();
         renderBooks();
         stats();
         loadDate(dIn.value || todayOrNextActive());
@@ -1024,7 +1043,7 @@
         appWorkspace.classList.add("hidden");
         manifestoCard.classList.add("hidden");
         manifestoToggle.classList.add("hidden");
-        logoutBtn.classList.add("hidden");
+        authGroup.classList.add("hidden");
         lockCard.classList.remove("hidden");
         dot.className = "dot"; st.textContent = "Очікування входу";
       }
